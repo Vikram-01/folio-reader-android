@@ -71,7 +71,7 @@ jobs:
           done
           # Fail the build if anything other than INTERNET is requested.
           extra=$("$BT/aapt2" dump permissions app/build/outputs/apk/release/app-release.apk | grep "uses-permission" | grep -v "android.permission.INTERNET" | grep -v "DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" || true)
-          if [ -n "$extra" ]; then echo "Unexpected permissions: $extra"; exit 1; fi
+          if [ -n "$extra" ]; then echo "$extra" | while IFS= read -r l; do echo "::error title=Unexpected permission::$l"; done; exit 1; fi
 
       - name: Collect outputs
         run: |
