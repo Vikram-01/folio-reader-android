@@ -1,0 +1,94 @@
+name: Build Folio
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write   # dependency graph submission (Dependabot vulnerability alerts)
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Unit, database and security tests
+        run: ./gradlew --no-daemon testDebugUnitTest
+
+      - name: Decode release keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.FOLIO_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/folio-release.jks"
+            echo "FOLIO_KEYSTORE_PATH=$RUNNER_TEMP/folio-release.jks" >> "$GITHUB_ENV"
+          else
+            echo "::warning::No FOLIO_KEYSTORE_B64 secret; release builds are signed with the debug key and must not be distributed."
+          fi
+
+      - name: Build debug APK, release APK and release bundle
+        env:
+          FOLIO_KEYSTORE_PASSWORD: ${{ secrets.FOLIO_KEYSTORE_PASSWORD }}
+          FOLIO_KEY_ALIAS: ${{ secrets.FOLIO_KEY_ALIAS }}
+          FOLIO_KEY_PASSWORD: ${{ secrets.FOLIO_KEY_PASSWORD }}
+        run: ./gradlew --no-daemon assembleDebug assembleRelease bundleRelease
+
+      - name: Verify signatures and permissions
+        run: |
+          BT=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
+          for apk in app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/debug/app-debug.apk; do
+            echo "== $apk"
+            "$BT/apksigner" verify --print-certs "$apk" | head -5
+            "$BT/aapt2" dump permissions "$apk"
+          done
+          # Fail the build if anything other than INTERNET is requested.
+          extra=$("$BT/aapt2" dump permissions app/build/outputs/apk/release/app-release.apk | grep "uses-permission" | grep -v "android.permission.INTERNET" | grep -v "DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" || true)
+          if [ -n "$extra" ]; then echo "Unexpected permissions: $extra"; exit 1; fi
+
+      - name: Collect outputs
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/debug/app-debug.apk dist/Folio-debug.apk
+          cp app/build/outputs/apk/release/app-release.apk dist/Folio-release.apk
+          cp app/build/outputs/bundle/release/app-release.aab dist/Folio-release.aab
+          ls -la dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: folio-builds
+          path: dist/
+          retention-days: 30
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-reports
+          path: app/build/reports/tests/
+          retention-days: 14
+
+  dependency-graph:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Submit dependency graph for vulnerability alerts
+        uses: gradle/actions/dependency-submission@v4

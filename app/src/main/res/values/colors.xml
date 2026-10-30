@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="folio_ink">#1B2A33</color>
+    <color name="folio_paper">#F6F2EA</color>
+    <color name="folio_accent">#E07A4F</color>
+    <color name="ic_launcher_background">#1B2A33</color>
+</resources>

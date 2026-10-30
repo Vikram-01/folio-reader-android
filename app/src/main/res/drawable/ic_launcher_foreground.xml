@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Folio mark: a paper leaf with a folded corner and a bookmark ribbon. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- leaf -->
+    <path android:fillColor="#F6F2EA"
+        android:pathData="M36,30 L64,30 L76,42 L76,78 Q76,80 74,80 L36,80 Q34,80 34,78 L34,32 Q34,30 36,30 Z" />
+    <!-- folded corner -->
+    <path android:fillColor="#E07A4F" android:pathData="M64,30 L76,42 L66,42 Q64,42 64,40 Z" />
+    <!-- ribbon -->
+    <path android:fillColor="#E07A4F" android:pathData="M42,30 L50,30 L50,50 L46,46.5 L42,50 Z" />
+    <!-- text lines -->
+    <path android:fillColor="#1B2A33" android:fillAlpha="0.35" android:pathData="M42,56h26v3h-26z" />
+    <path android:fillColor="#1B2A33" android:fillAlpha="0.35" android:pathData="M42,63h26v3h-26z" />
+    <path android:fillColor="#1B2A33" android:fillAlpha="0.35" android:pathData="M42,70h17v3h-17z" />
+</vector>
