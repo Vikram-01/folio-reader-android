@@ -37,7 +37,7 @@ Document WebViews (EPUB, HTML, Markdown, saved pages, reader mode): JavaScript o
 - All data in app-private internal storage. No storage permissions requested; import uses the Storage Access Framework, and only `content://` URIs are accepted from other apps.
 - `allowBackup=false` and data-extraction rules exclude everything from Android cloud backup and device transfer. Backups are explicit and can be encrypted (AES-256-GCM, PBKDF2-SHA256 210k iterations).
 - Temporary files are created in the private cache with random names and deleted after use and at app start.
-- Only permission: `android.permission.INTERNET`. CI fails the build if any other permission appears.
+- Declared permission: `android.permission.INTERNET` only. WorkManager (used for background search indexing) merges in `WAKE_LOCK`, `ACCESS_NETWORK_STATE`, `RECEIVE_BOOT_COMPLETED` and `FOREGROUND_SERVICE`; none of these are runtime/dangerous permissions. CI fails the build if any permission outside this set appears.
 - Release builds are minified with R8 and log calls below WARN are stripped.
 
 ## Android Keystore
