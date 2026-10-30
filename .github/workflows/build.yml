@@ -33,6 +33,9 @@ jobs:
           ./gradlew --no-daemon testDebugUnitTest 2>&1 | tee gradle-test.log || {
             grep -E "^e: |What went wrong|FAILED|Exception|error:" gradle-test.log | head -40 | while IFS= read -r l; do echo "::error::$l"; done
             sed -n '/What went wrong/,/Try:/p' gradle-test.log | head -30 | while IFS= read -r l; do echo "::error::$l"; done
+            for x in app/build/test-results/testDebugUnitTest/*.xml; do
+              grep -A25 "<failure" "$x" | head -40 | while IFS= read -r l; do echo "::error title=$(basename $x)::$l"; done
+            done
             exit 1; }
 
       - name: Decode release keystore
