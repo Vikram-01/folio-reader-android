@@ -28,7 +28,12 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
 
       - name: Unit, database and security tests
-        run: ./gradlew --no-daemon testDebugUnitTest
+        run: |
+          set -o pipefail
+          ./gradlew --no-daemon testDebugUnitTest 2>&1 | tee gradle-test.log || {
+            grep -E "^e: |What went wrong|FAILED|Exception|error:" gradle-test.log | head -40 | while IFS= read -r l; do echo "::error::$l"; done
+            sed -n '/What went wrong/,/Try:/p' gradle-test.log | head -30 | while IFS= read -r l; do echo "::error::$l"; done
+            exit 1; }
 
       - name: Decode release keystore
         env:
@@ -46,7 +51,12 @@ jobs:
           FOLIO_KEYSTORE_PASSWORD: ${{ secrets.FOLIO_KEYSTORE_PASSWORD }}
           FOLIO_KEY_ALIAS: ${{ secrets.FOLIO_KEY_ALIAS }}
           FOLIO_KEY_PASSWORD: ${{ secrets.FOLIO_KEY_PASSWORD }}
-        run: ./gradlew --no-daemon assembleDebug assembleRelease bundleRelease
+        run: |
+          set -o pipefail
+          ./gradlew --no-daemon assembleDebug assembleRelease bundleRelease 2>&1 | tee gradle-build.log || {
+            grep -E "^e: |What went wrong|FAILED|Exception|error:|Missing class" gradle-build.log | head -40 | while IFS= read -r l; do echo "::error::$l"; done
+            sed -n '/What went wrong/,/Try:/p' gradle-build.log | head -30 | while IFS= read -r l; do echo "::error::$l"; done
+            exit 1; }
 
       - name: Verify signatures and permissions
         run: |
@@ -83,6 +93,7 @@ jobs:
 
   dependency-graph:
     runs-on: ubuntu-latest
+    continue-on-error: true   # needs Settings > Code security > Dependency graph enabled
     if: github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
