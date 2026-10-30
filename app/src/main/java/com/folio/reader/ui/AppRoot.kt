@@ -160,23 +160,23 @@ fun AppRoot(vm: MainViewModel, prefs: UserPrefs) {
                     composable(Routes.SEARCH) { SearchScreen(navigate) }
                     composable(Routes.SETTINGS) { SettingsScreen(navigate, { nav.popBackStack() }) }
                     composable(Routes.COLLECTION, arguments = listOf(navArgument("id") { type = NavType.LongType })) {
-                        CollectionDetailScreen(it.arguments!!.getLong("id"), navigate) { nav.popBackStack() }
+                        CollectionDetailScreen(it.arguments!!.getLong("id"), navigate, back = { nav.popBackStack() })
                     }
                     composable(Routes.TAG, arguments = listOf(navArgument("id") { type = NavType.LongType })) {
-                        TagScreen(it.arguments!!.getLong("id"), navigate) { nav.popBackStack() }
+                        TagScreen(it.arguments!!.getLong("id"), navigate, back = { nav.popBackStack() })
                     }
                     composable(
                         Routes.READER,
                         arguments = listOf(navArgument("id") { type = NavType.LongType }, navArgument("pos") { type = NavType.IntType; defaultValue = -1 }),
-                    ) { ReaderScreen(navigate) { nav.popBackStack() } }
+                    ) { ReaderScreen(navigate, back = { nav.popBackStack() }) }
                     composable(Routes.BROWSER, arguments = listOf(navArgument("url") { type = NavType.StringType; nullable = true; defaultValue = null })) {
-                        BrowserScreen(it.arguments?.getString("url"), navigate) { nav.popBackStack() }
+                        BrowserScreen(it.arguments?.getString("url"), navigate, back = { nav.popBackStack() })
                     }
                     composable(Routes.OFFLINE, arguments = listOf(navArgument("id") { type = NavType.LongType })) {
-                        OfflinePageScreen(it.arguments!!.getLong("id"), navigate) { nav.popBackStack() }
+                        OfflinePageScreen(it.arguments!!.getLong("id"), navigate, back = { nav.popBackStack() })
                     }
-                    composable(Routes.DOWNLOADS) { DownloadsScreen(navigate) { nav.popBackStack() } }
-                    composable(Routes.HISTORY) { HistoryScreen(navigate) { nav.popBackStack() } }
+                    composable(Routes.DOWNLOADS) { DownloadsScreen(navigate, back = { nav.popBackStack() }) }
+                    composable(Routes.HISTORY) { HistoryScreen(navigate, back = { nav.popBackStack() }) }
                 }
             }
         }
