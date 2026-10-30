@@ -36,7 +36,7 @@ class DatabaseTest {
         title = title, originalName = "$title.pdf", storedName = "$sha.pdf", format = "PDF", mime = "application/pdf",
         sizeBytes = 10, sha256 = sha, folderId = folder, addedAt = System.currentTimeMillis())
 
-    @Test fun fullTextSearchFindsPagesWithSnippets() = runBlocking {
+    @Test fun fullTextSearchFindsPagesWithSnippets() = runBlocking<Unit> {
         val id = db.documents().insert(doc("Physics", "aa"))
         db.search().replaceOwner("doc", id.toString(), listOf(
             Triple("0", "Page 1", "Introduction to classical mechanics"),
@@ -52,13 +52,13 @@ class DatabaseTest {
         db.search().search(repo.ftsQuery("\"quantum\" OR NEAR(* -x)")!!, 10)
     }
 
-    @Test fun duplicateDetectionBySha() = runBlocking {
+    @Test fun duplicateDetectionBySha() = runBlocking<Unit> {
         db.documents().insert(doc("A", "same"))
         assertNotNull(db.documents().findBySha("same"))
         assertNull(db.documents().findBySha("other"))
     }
 
-    @Test fun deletingFolderKeepsDocuments() = runBlocking {
+    @Test fun deletingFolderKeepsDocuments() = runBlocking<Unit> {
         val folder = db.folders().insert(FolderEntity(name = "Work", createdAt = 0))
         val id = db.documents().insert(doc("Report", "r1", folder))
         db.folders().delete(db.folders().get(folder)!!)
@@ -67,7 +67,7 @@ class DatabaseTest {
         assertNull(d!!.folderId)
     }
 
-    @Test fun deletingDocumentRemovesItsProgress() = runBlocking {
+    @Test fun deletingDocumentRemovesItsProgress() = runBlocking<Unit> {
         val id = db.documents().insert(doc("Book", "b1"))
         db.reading().saveProgress(ReadingProgressEntity(id, 3, 0.2f, 0.4f, 1))
         assertEquals(1, db.documents().observeContinueReading(10).first().size)
@@ -75,7 +75,7 @@ class DatabaseTest {
         assertNull(db.reading().progress(id))
     }
 
-    @Test fun bookmarkLookupByNormalisedUrl() = runBlocking {
+    @Test fun bookmarkLookupByNormalisedUrl() = runBlocking<Unit> {
         db.bookmarks().insert(BookmarkEntity(url = "https://ex.com/a", normalizedUrl = "https://ex.com/a", title = "A", createdAt = 0, updatedAt = 0))
         assertNotNull(db.bookmarks().findByNormalized("https://ex.com/a"))
         assertEquals(1, db.bookmarks().searchLike("%ex.com%").size)
