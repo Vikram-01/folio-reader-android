@@ -33,6 +33,7 @@ class FolioApp : Application(), Configuration.Provider, ImageLoaderFactory {
 
     override fun onCreate() {
         super.onCreate()
+        com.folio.reader.core.crash.CrashReporter.install(this)
         if (BuildConfig.DEBUG) {
             StrictMode.setVmPolicy(
                 StrictMode.VmPolicy.Builder().detectLeakedClosableObjects().detectFileUriExposure().penaltyLog().build()

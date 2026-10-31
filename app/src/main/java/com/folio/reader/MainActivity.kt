@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val prefs by vm.prefs.collectAsStateWithLifecycle()
-            prefs?.let { p -> FolioTheme(theme = p.theme, dynamic = p.dynamicColor) { AppRoot(vm, p) } }
+            prefs?.let { p -> FolioTheme(theme = p.theme, dynamic = p.dynamicColor) { AppRoot(vm, p); com.folio.reader.core.crash.CrashReportDialog() } }
         }
         if (savedInstanceState == null) handleIntent(intent)
     }

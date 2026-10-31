@@ -120,8 +120,12 @@ class ReaderViewModel @Inject constructor(
         if (!format.supported) return ReaderContent.Unsupported(format)
         return try {
             when (format.kind) {
-                ReaderKind.PDF -> ReaderContent.Pdf(file, PdfDocumentHolder.pageCount(file))
-                ReaderKind.EPUB -> ReaderContent.Epub(EpubBook.open(file, File(files.epubCacheDir, d.id.toString()).apply { mkdirs() }))
+                ReaderKind.PDF -> PdfDocumentHolder.pageCount(file).let { n ->
+                    if (n > 0) ReaderContent.Pdf(file, n) else ReaderContent.Failed("This PDF has no pages.")
+                }
+                ReaderKind.EPUB -> EpubBook.open(file, File(files.epubCacheDir, d.id.toString()).apply { mkdirs() }).let { b ->
+                    if (b.chapters.isNotEmpty()) ReaderContent.Epub(b) else ReaderContent.Failed("This EPUB has no readable chapters.")
+                }
                 ReaderKind.TEXT -> {
                     val (raw, truncated) = TextFormats.readText(file)
                     var text = if (format == DocFormat.RTF) TextFormats.rtfToPlain(raw) else raw
