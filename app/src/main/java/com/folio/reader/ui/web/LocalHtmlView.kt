@@ -52,12 +52,15 @@ fun LocalHtmlView(
     val loadedHandler by rememberUpdatedState(onLoaded)
     val currentCss by rememberUpdatedState(css)
     var view by remember { mutableStateOf<WebView?>(null) }
+    val pageRef = remember { java.util.concurrent.atomic.AtomicReference<String?>(null) }
+    var version by remember { mutableStateOf(0) }
     AndroidView(
         modifier = modifier,
         factory = { ctx ->
             WebView(ctx).apply {
                 SecureWeb.configureDocument(this)
-                webViewClient = LocalOnlyClient(injectCss = { currentCss }, onLink = { linkHandler(it) }, onLoaded = { loadedHandler(it) })
+                webViewClient = LocalOnlyClient(injectCss = { currentCss }, onLink = { linkHandler(it) }, onLoaded = { loadedHandler(it) },
+                    page = { pageRef.get() })
                 setBackgroundColor(android.graphics.Color.TRANSPARENT)
                 view = this
                 onWebView(this)
@@ -69,6 +72,9 @@ fun LocalHtmlView(
         val v = view ?: return@LaunchedEffect
         val doc = "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">" +
             "<style>$css</style></head><body>$html</body></html>"
-        v.loadDataWithBaseURL(SecureWeb.LOCAL_ORIGIN, doc, "text/html", "utf-8", null)
+        pageRef.set(doc)
+        version++
+        // Served by LocalOnlyClient from the local origin; the version defeats any caching when content changes.
+        v.loadUrl("${SecureWeb.LOCAL_ORIGIN}${LocalOnlyClient.DOC_PATH}?v=$version")
     }
 }

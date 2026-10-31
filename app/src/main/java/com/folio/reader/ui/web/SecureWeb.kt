@@ -115,12 +115,29 @@ open class LocalOnlyClient(
     private val injectCss: () -> String? = { null },
     private val onLink: (Uri) -> Unit = {},
     private val onLoaded: (WebView) -> Unit = {},
+    /** In-memory page served at [DOC_PATH] (documents rendered to HTML in the app). */
+    private val page: () -> String? = { null },
 ) : WebViewClient() {
+
+    companion object {
+        /**
+         * Generated documents are served from the local origin rather than loaded as data: URLs.
+         * Recent WebView versions route data: main-frame loads through shouldInterceptRequest,
+         * where the network block below would refuse them.
+         */
+        const val DOC_PATH = "__doc.html"
+    }
 
     override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
         val url = request.url
         if (url.scheme != "https" || url.host != SecureWeb.LOCAL_HOST) return SecureWeb.blocked()
         val path = url.path?.trimStart('/') ?: return SecureWeb.blocked()
+        if (path == DOC_PATH) {
+            val html = page() ?: return SecureWeb.blocked()
+            return WebResourceResponse("text/html", "utf-8", 200, "OK",
+                mapOf("Content-Security-Policy" to "default-src 'none'; img-src https://${SecureWeb.LOCAL_HOST} data:; style-src 'unsafe-inline'",
+                    "Cache-Control" to "no-store"), ByteArrayInputStream(html.toByteArray(Charsets.UTF_8)))
+        }
         if (path == "__folio.css") {
             val css = injectCss() ?: ""
             return WebResourceResponse("text/css", "utf-8", ByteArrayInputStream(css.toByteArray()))
