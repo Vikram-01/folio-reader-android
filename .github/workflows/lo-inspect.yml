@@ -1,0 +1,32 @@
+name: Inspect LibreOffice engine
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download LibreOffice Viewer (F-Droid, arm64-v8a, 26.2.6.3)
+        run: |
+          curl -fsSL -o /tmp/lo.apk https://f-droid.org/repo/org.documentfoundation.libreoffice_131.apk
+          mkdir -p /tmp/report
+          sha256sum /tmp/lo.apk | tee /tmp/report/sha256.txt
+      - name: Inspect
+        run: |
+          cd /tmp
+          unzip -l lo.apk > report/listing.txt
+          unzip -l lo.apk | awk '{print $4}' | grep '^assets/' | cut -d/ -f2-3 | sort | uniq -c | sort -rn | head -80 > report/assets-top.txt
+          unzip -q lo.apk 'lib/*' -d x
+          nm -D --defined-only x/lib/arm64-v8a/liblo-native-code.so | grep ' T Java_' > report/jni-symbols.txt || true
+          strings -n 8 x/lib/arm64-v8a/liblo-native-code.so | grep 'org/libreoffice/' | sort -u | head -300 > report/java-refs.txt || true
+          python3 "$GITHUB_WORKSPACE/.github/scripts/inspect_apk.py" lo.apk > report/compression.txt
+      - name: Publish report
+        run: |
+          cd /tmp/report
+          git init -q -b lo-inspect
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add . && git commit -qm "LibreOffice APK inspection"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" lo-inspect
