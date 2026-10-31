@@ -1,0 +1,1 @@
+* @source https://cgit.freedesktop.org/libreoffice/core/tree/slideshow/source

@@ -1,0 +1,15 @@
+assets stored 2 deflated 86 uncompressed bytes 18808984
+lib/arm64-v8a/libc++_shared.so deflated 1374336
+lib/arm64-v8a/libfreebl3.so deflated 1340224
+lib/arm64-v8a/liblo-native-code.so deflated 196227296
+lib/arm64-v8a/libnspr4.so deflated 365680
+lib/arm64-v8a/libnss3.so deflated 1659152
+lib/arm64-v8a/libnssckbi.so deflated 626888
+lib/arm64-v8a/libnssdbm3.so deflated 199648
+lib/arm64-v8a/libnssutil3.so deflated 269576
+lib/arm64-v8a/libplc4.so deflated 23088
+lib/arm64-v8a/libplds4.so deflated 14528
+lib/arm64-v8a/libsmime3.so deflated 242160
+lib/arm64-v8a/libsoftokn3.so deflated 483608
+lib/arm64-v8a/libsqlite3.so deflated 1275288
+lib/arm64-v8a/libssl3.so deflated 701528
