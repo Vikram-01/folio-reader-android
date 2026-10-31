@@ -41,12 +41,18 @@ jobs:
       - name: Decode release keystore
         env:
           KEYSTORE_B64: ${{ secrets.FOLIO_KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.FOLIO_KEYSTORE_PASSWORD }}
         run: |
           if [ -n "$KEYSTORE_B64" ]; then
             echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/folio-release.jks"
             echo "FOLIO_KEYSTORE_PATH=$RUNNER_TEMP/folio-release.jks" >> "$GITHUB_ENV"
+          elif [ -f signing/folio-release.jks.gpg ] && [ -n "$KEYSTORE_PASSWORD" ]; then
+            # Keystore is committed AES-256 encrypted; FOLIO_KEYSTORE_PASSWORD decrypts it.
+            gpg --quiet --batch --yes --pinentry-mode loopback --passphrase "$KEYSTORE_PASSWORD" \
+              --decrypt --output "$RUNNER_TEMP/folio-release.jks" signing/folio-release.jks.gpg
+            echo "FOLIO_KEYSTORE_PATH=$RUNNER_TEMP/folio-release.jks" >> "$GITHUB_ENV"
           else
-            echo "::warning::No FOLIO_KEYSTORE_B64 secret; release builds are signed with the debug key and must not be distributed."
+            echo "::warning::No keystore available (need FOLIO_KEYSTORE_B64, or FOLIO_KEYSTORE_PASSWORD to decrypt signing/folio-release.jks.gpg); release builds are signed with the debug key and must not be distributed."
           fi
 
       - name: Build debug APK, release APK and release bundle
