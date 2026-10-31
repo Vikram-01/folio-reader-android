@@ -104,13 +104,13 @@ jobs:
           git add . && git commit -qm "APKs from ${GITHUB_SHA::7} (run ${GITHUB_RUN_ID})"
           git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" apk-builds
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: readstash-builds
           path: dist/
           retention-days: 30
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: test-reports
