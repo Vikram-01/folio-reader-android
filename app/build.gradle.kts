@@ -12,8 +12,10 @@ plugins {
 // the project still builds locally; such an APK must not be distributed.
 val releaseStoreFile: String? = System.getenv("FOLIO_KEYSTORE_PATH")
 val releaseStorePassword: String? = System.getenv("FOLIO_KEYSTORE_PASSWORD")
-val releaseKeyAlias: String? = System.getenv("FOLIO_KEY_ALIAS")
-val releaseKeyPassword: String? = System.getenv("FOLIO_KEY_PASSWORD")
+// The alias is not sensitive; default to the one used when the key was generated.
+val releaseKeyAlias: String = System.getenv("FOLIO_KEY_ALIAS")?.takeIf { it.isNotBlank() } ?: "folio"
+// The key was generated with the same password as the store.
+val releaseKeyPassword: String? = System.getenv("FOLIO_KEY_PASSWORD")?.takeIf { it.isNotBlank() } ?: releaseStorePassword
 val hasReleaseKey = !releaseStoreFile.isNullOrBlank() && file(releaseStoreFile!!).exists()
 
 android {
