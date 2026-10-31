@@ -194,7 +194,7 @@ fun BookmarksScreen(nav: (String) -> Unit, onAdd: () -> Unit, vm: BookmarksViewM
             }
             if (items.isEmpty()) item {
                 EmptyState(Icons.Outlined.BookmarkBorder, "No bookmarks here",
-                    "Save links from any app with Share → Save link to Folio, or tap Save link. Pages open in Folio's private browser.",
+                    "Save links from any app with Share → Save link to ReadStash, or tap Save link. Pages open in ReadStash's private browser.",
                     Modifier.padding(top = 24.dp))
             }
             items(items, key = { it.id }) { b ->

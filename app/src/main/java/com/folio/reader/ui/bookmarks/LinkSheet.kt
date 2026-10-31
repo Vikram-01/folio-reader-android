@@ -39,7 +39,7 @@ fun LinkSheet(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text("Save link", style = MaterialTheme.typography.headlineSmall)
-            Text("Saved on this device only. Folio doesn't fetch the page until you open it.",
+            Text("Saved on this device only. ReadStash doesn't fetch the page until you open it.",
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             OutlinedTextField(
                 draft.url, { onChange(draft.copy(url = it, duplicateOf = null)) }, label = { Text("URL") },

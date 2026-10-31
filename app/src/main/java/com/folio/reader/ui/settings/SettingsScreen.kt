@@ -170,7 +170,7 @@ fun SettingsScreen(nav: (String) -> Unit, back: () -> Unit, vm: SettingsViewMode
 
             item { Header("Browser") }
             item {
-                Text("The browser is the only part of Folio that connects to the internet. It allows HTTPS only and never runs downloaded files.",
+                Text("The browser is the only part of ReadStash that connects to the internet. It allows HTTPS only and never runs downloaded files.",
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp))
             }
             item { Choice("Search engine", Icons.Outlined.TravelExplore, SearchEngine.entries.map { it.label }, p.searchEngine.ordinal) { i -> vm.set { setSearchEngine(SearchEngine.entries[i]) } } }
@@ -213,7 +213,7 @@ fun SettingsScreen(nav: (String) -> Unit, back: () -> Unit, vm: SettingsViewMode
                     listOf(
                         "Works offline. No account, analytics, ads or cloud sync.",
                         "Only permission requested: Internet, used by the in-app browser.",
-                        "Files are stored in Folio's private app storage and excluded from cloud backup.",
+                        "Files are stored in ReadStash's private app storage and excluded from cloud backup.",
                         "Documents open with JavaScript off and all network requests blocked.",
                         "Archives are checked for path traversal and zip bombs; size limits on every file.",
                         "Executables and app packages are refused; nothing downloaded is ever run.",
@@ -222,8 +222,8 @@ fun SettingsScreen(nav: (String) -> Unit, back: () -> Unit, vm: SettingsViewMode
             }
 
             item { Header("About") }
-            item { Action("Supported formats", "What Folio can open in this version", Icons.Outlined.Description) { showFormats = true } }
-            item { ListItem(leadingContent = { Icon(Icons.Outlined.Info, null) }, headlineContent = { Text("Folio ${BuildConfig.VERSION_NAME}") }, supportingContent = { Text("Offline-first reader & library") }) }
+            item { Action("Supported formats", "What ReadStash can open in this version", Icons.Outlined.Description) { showFormats = true } }
+            item { ListItem(leadingContent = { Icon(Icons.Outlined.Info, null) }, headlineContent = { Text("ReadStash ${BuildConfig.VERSION_NAME}") }, supportingContent = { Text("Offline-first reader & library") }) }
         }
     }
 
@@ -262,7 +262,7 @@ fun SettingsScreen(nav: (String) -> Unit, back: () -> Unit, vm: SettingsViewMode
     if (showFormats) AlertDialog(onDismissRequest = { showFormats = false }, title = { Text("Supported formats") },
         text = {
             LazyColumn(Modifier.heightIn(max = 460.dp)) {
-                item { Text("Opens in Folio", style = MaterialTheme.typography.titleSmall) }
+                item { Text("Opens in ReadStash", style = MaterialTheme.typography.titleSmall) }
                 DocFormat.entries.filter { it.supported }.forEach { f -> item { Text("•  ${f.label} (${f.extensions.joinToString { ".$it" }})", style = MaterialTheme.typography.bodySmall) } }
                 item { Text("Stored, no viewer yet", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp)) }
                 DocFormat.entries.filter { !it.supported }.forEach { f -> item { Text("•  ${f.label} (${f.extensions.joinToString { ".$it" }})", style = MaterialTheme.typography.bodySmall) } }

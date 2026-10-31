@@ -135,9 +135,9 @@ class BackupRepository @Inject constructor(
             }
             ZipFile(zipTmp).use { zip ->
                 SafeZip.preflight(zip, maxEntries = 500_000, maxTotal = 200L shl 30, maxEntry = Limits.MAX_IMPORT_BYTES + 1)
-                val manifestBytes = SafeZip.readEntry(zip, "manifest.json", 256L shl 20) ?: throw IOException("Not a Folio backup.")
+                val manifestBytes = SafeZip.readEntry(zip, "manifest.json", 256L shl 20) ?: throw IOException("Not a ReadStash backup.")
                 val m = json.decodeFromString(BackupManifest.serializer(), String(manifestBytes))
-                if (m.format != "folio-backup" || m.version > 1) throw IOException("This backup was made by a newer version of Folio.")
+                if (m.format != "folio-backup" || m.version > 1) throw IOException("This backup was made by a newer version of ReadStash.")
                 merge(zip, m)
             }
         } finally {

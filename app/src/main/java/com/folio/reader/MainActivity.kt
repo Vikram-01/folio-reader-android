@@ -54,7 +54,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
             Intent.ACTION_VIEW -> {
-                // "Open with Folio" from a file manager: show the file read-only, straight from the source.
+                // "Open with ReadStash" from a file manager: show the file read-only, straight from the source.
                 // Nothing is copied into the library and no history is kept (sharing a file still imports it).
                 // Only content:// is accepted (other apps granting us a file); file:// would expose arbitrary paths.
                 intent.data?.takeIf { it.scheme == "content" }?.let { vm.openViewer(it) }

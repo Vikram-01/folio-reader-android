@@ -58,7 +58,7 @@ fun HistoryScreen(nav: (String) -> Unit, back: () -> Unit, vm: BrowserDataViewMo
         TopAppBar(navigationIcon = { IconButton(onClick = back) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } }, title = { Text("History") },
             actions = { if (items.isNotEmpty()) TextButton(onClick = { confirm = true }) { Text("Clear") } })
     }) { pad ->
-        if (items.isEmpty()) EmptyState(Icons.Outlined.History, "No history", "Pages you visit in Folio's browser appear here. You can turn history off in Settings.", Modifier.padding(pad))
+        if (items.isEmpty()) EmptyState(Icons.Outlined.History, "No history", "Pages you visit in ReadStash's browser appear here. You can turn history off in Settings.", Modifier.padding(pad))
         else LazyColumn(Modifier.padding(pad)) {
             items(items, key = { it.id }) { h ->
                 ListItem(modifier = Modifier.clickable { nav(Routes.browser(h.url)) },

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Folio</string>
-    <string name="share_save_link">Save link to Folio</string>
-    <string name="share_import">Add to Folio library</string>
+    <string name="app_name">ReadStash</string>
+    <string name="share_save_link">Save link to ReadStash</string>
+    <string name="share_import">Add to ReadStash library</string>
 </resources>

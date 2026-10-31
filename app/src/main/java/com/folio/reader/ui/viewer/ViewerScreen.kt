@@ -80,7 +80,7 @@ fun ViewerScreen(nav: (String) -> Unit, back: () -> Unit, vm: ViewerViewModel = 
                 EmptyState(Icons.Outlined.ErrorOutline, "Can't open this file", c.message) { OutlinedButton(onClick = back) { Text("Go back") } }
             }
             is ReaderContent.Unsupported -> Box(Modifier.fillMaxSize().statusBarsPadding(), contentAlignment = Alignment.Center) {
-                EmptyState(Icons.Outlined.Inventory2, "No viewer for ${c.format.label} yet", "This version of Folio can't display ${c.format.label} files.") {
+                EmptyState(Icons.Outlined.Inventory2, "No viewer for ${c.format.label} yet", "This version of ReadStash can't display ${c.format.label} files.") {
                     OutlinedButton(onClick = back) { Text("Go back") }
                 }
             }
@@ -117,7 +117,7 @@ fun ViewerScreen(nav: (String) -> Unit, back: () -> Unit, vm: ViewerViewModel = 
                         val sub = listOfNotNull(
                             formatLabel,
                             if (total > 1) "$unit ${pos + 1} of $total" else null,
-                            "Not saved to Folio",
+                            "Not saved to ReadStash",
                         ).joinToString(" · ")
                         Text(sub, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }

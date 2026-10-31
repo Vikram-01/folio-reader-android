@@ -114,7 +114,7 @@ class ViewerViewModel @Inject constructor(
                 null -> ReaderContent.Unsupported(format)
             }
         } catch (e: SecurityException) {
-            ReaderContent.Failed("Folio wasn't allowed to read this file, or the PDF is password-protected.")
+            ReaderContent.Failed("ReadStash wasn't allowed to read this file, or the PDF is password-protected.")
         } catch (e: FileNotFoundException) {
             ReaderContent.Failed("The file is no longer available. It may have been moved or deleted.")
         } catch (e: OutOfMemoryError) {

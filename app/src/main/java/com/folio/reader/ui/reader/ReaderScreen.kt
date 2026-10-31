@@ -90,7 +90,7 @@ fun ReaderScreen(nav: (String) -> Unit, back: () -> Unit, vm: ReaderViewModel = 
                 }
                 c is ReaderContent.Unsupported -> Box(Modifier.fillMaxSize().statusBarsPadding(), contentAlignment = Alignment.Center) {
                     EmptyState(Icons.Outlined.Inventory2, "No viewer for ${c.format.label} yet",
-                        "This file is stored safely in your library. This version of Folio can't display ${c.format.label} files; you can export a copy from the details sheet.") {
+                        "This file is stored safely in your library. This version of ReadStash can't display ${c.format.label} files; you can export a copy from the details sheet.") {
                         Button(onClick = { sheet = Sheet.DETAILS }) { Text("Details & export") }
                     }
                 }

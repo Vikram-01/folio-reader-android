@@ -1,4 +1,4 @@
-name: Build Folio
+name: Build ReadStash
 
 on:
   push:
@@ -86,9 +86,9 @@ jobs:
       - name: Collect outputs
         run: |
           mkdir -p dist
-          cp app/build/outputs/apk/debug/app-debug.apk dist/Folio-debug.apk
-          cp app/build/outputs/apk/release/app-release.apk dist/Folio-release.apk
-          cp app/build/outputs/bundle/release/app-release.aab dist/Folio-release.aab
+          cp app/build/outputs/apk/debug/app-debug.apk dist/ReadStash-debug.apk
+          cp app/build/outputs/apk/release/app-release.apk dist/ReadStash-release.apk
+          cp app/build/outputs/bundle/release/app-release.aab dist/ReadStash-release.aab
           ls -la dist
 
       - name: Publish APKs to apk-builds branch
@@ -97,7 +97,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p "$RUNNER_TEMP/apk" && cd "$RUNNER_TEMP/apk"
-          cp "$GITHUB_WORKSPACE/dist/Folio-release.apk" "$GITHUB_WORKSPACE/dist/Folio-debug.apk" .
+          cp "$GITHUB_WORKSPACE/dist/ReadStash-release.apk" "$GITHUB_WORKSPACE/dist/ReadStash-debug.apk" .
           git init -q -b apk-builds
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -106,7 +106,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: folio-builds
+          name: readstash-builds
           path: dist/
           retention-days: 30
 

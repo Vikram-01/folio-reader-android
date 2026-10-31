@@ -235,7 +235,7 @@ class BookmarkRepository @Inject constructor(
         val tagRefs = db.tags().allBookmarkTagRefs().groupBy { it.bookmarkId }
         fun esc(s: String) = org.jsoup.nodes.Entities.escape(s)
         val sb = StringBuilder()
-        sb.append("<!DOCTYPE NETSCAPE-Bookmark-file-1>\n<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">\n<TITLE>Bookmarks</TITLE>\n<H1>Folio bookmarks</H1>\n<DL><p>\n")
+        sb.append("<!DOCTYPE NETSCAPE-Bookmark-file-1>\n<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">\n<TITLE>Bookmarks</TITLE>\n<H1>ReadStash bookmarks</H1>\n<DL><p>\n")
         fun writeBookmarks(list: List<BookmarkEntity>, indent: String) {
             for (b in list) {
                 val tags = tagRefs[b.id].orEmpty().mapNotNull { tagsById[it.tagId]?.name }.joinToString(",")

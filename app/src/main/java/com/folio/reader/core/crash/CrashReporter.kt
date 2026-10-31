@@ -23,7 +23,7 @@ object CrashReporter {
                 val sw = StringWriter()
                 e.printStackTrace(PrintWriter(sw))
                 val text = buildString {
-                    appendLine("Folio ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
+                    appendLine("ReadStash ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
                     appendLine("Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT}), ${Build.MANUFACTURER} ${Build.MODEL}")
                     appendLine("Thread: ${thread.name}")
                     appendLine()

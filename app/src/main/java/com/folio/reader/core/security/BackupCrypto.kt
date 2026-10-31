@@ -79,7 +79,7 @@ object BackupCrypto {
     fun decrypt(input: InputStream, output: OutputStream, password: CharArray) {
         val inp = DataInputStream(input)
         val magic = ByteArray(MAGIC.size).also { inp.readFully(it) }
-        if (!magic.contentEquals(MAGIC)) throw IOException("Not an encrypted Folio backup.")
+        if (!magic.contentEquals(MAGIC)) throw IOException("Not an encrypted ReadStash backup.")
         if (inp.readByte() != VERSION) throw IOException("Unsupported backup version.")
         val iterations = inp.readInt()
         if (iterations !in 10_000..5_000_000) throw IOException("Corrupt backup header.")

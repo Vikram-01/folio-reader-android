@@ -32,7 +32,7 @@ fun CrashReportDialog() {
     val text = report ?: return
     AlertDialog(
         onDismissRequest = { report = null },
-        title = { Text("Folio closed unexpectedly") },
+        title = { Text("ReadStash closed unexpectedly") },
         text = {
             SelectionContainer(Modifier.heightIn(max = 360.dp).verticalScroll(rememberScrollState())) {
                 Text(text, fontFamily = FontFamily.Monospace, fontSize = 11.sp, style = MaterialTheme.typography.bodySmall)
@@ -41,7 +41,7 @@ fun CrashReportDialog() {
         confirmButton = {
             TextButton(onClick = {
                 val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                cm.setPrimaryClip(ClipData.newPlainText("Folio crash report", text))
+                cm.setPrimaryClip(ClipData.newPlainText("ReadStash crash report", text))
                 Toast.makeText(context, "Crash report copied", Toast.LENGTH_SHORT).show()
             }) { Text("Copy") }
         },

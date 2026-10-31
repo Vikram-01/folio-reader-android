@@ -108,7 +108,7 @@ fun DocumentDetailsSheet(docId: Long, onDismiss: () -> Unit, onOpen: (() -> Unit
             if (format?.supported == false) {
                 Spacer(Modifier.height(12.dp))
                 Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
-                    Text("${format.label} files are stored safely in your library, but this version of Folio can't display them yet. You can export a copy any time.",
+                    Text("${format.label} files are stored safely in your library, but this version of ReadStash can't display them yet. You can export a copy any time.",
                         Modifier.padding(12.dp), style = MaterialTheme.typography.bodySmall)
                 }
             }

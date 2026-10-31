@@ -234,7 +234,7 @@ fun DocumentsScreen(nav: (String) -> Unit, onImport: () -> Unit, vm: DocumentsVi
                 EmptyState(
                     Icons.Outlined.LibraryBooks,
                     if (s.total == 0) "No documents yet" else "Nothing here",
-                    if (s.total == 0) "Import PDFs, EPUB books, text, CSV and images. Imported files are copied into Folio, so they stay even if the original is moved or deleted."
+                    if (s.total == 0) "Import PDFs, EPUB books, text, CSV and images. Imported files are copied into ReadStash, so they stay even if the original is moved or deleted."
                     else "Try another filter or folder.",
                     Modifier.padding(top = 32.dp),
                 ) { if (s.total == 0) Button(onClick = onImport) { Text("Import documents") } }

@@ -179,7 +179,9 @@ fun BrowserScreen(initialUrl: String?, nav: (String) -> Unit, back: () -> Unit, 
         snackbarHost = { SnackbarHost(snackbar) },
         contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
-            Column(Modifier.background(MaterialTheme.colorScheme.surfaceContainer)) {
+            // Background reaches behind the status bar; the controls sit below it (and clear any camera cutout).
+            Column(Modifier.background(MaterialTheme.colorScheme.surfaceContainer)
+                .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = back) { Icon(Icons.Default.Close, "Close browser") }
                     OutlinedTextField(
@@ -327,7 +329,7 @@ fun BrowserScreen(initialUrl: String?, nav: (String) -> Unit, back: () -> Unit, 
                                 override fun onReceivedSslError(view: WebView, handler: SslErrorHandler, e: SslError) {
                                     // Never proceed past certificate errors.
                                     handler.cancel()
-                                    error = "This site's security certificate isn't trusted, so Folio stopped loading it."
+                                    error = "This site's security certificate isn't trusted, so ReadStash stopped loading it."
                                 }
 
                                 override fun onReceivedError(view: WebView, request: WebResourceRequest, e: WebResourceError) {
@@ -350,7 +352,7 @@ fun BrowserScreen(initialUrl: String?, nav: (String) -> Unit, back: () -> Unit, 
                                 override fun onGeolocationPermissionsShowPrompt(origin: String?, callback: GeolocationPermissions.Callback) { callback.invoke(origin, false, false) }
                                 override fun onShowFileChooser(view: WebView?, cb: ValueCallback<Array<Uri>>?, params: WebChromeClient.FileChooserParams?): Boolean {
                                     cb?.onReceiveValue(null)
-                                    vm.message.value = "File uploads are turned off in Folio's browser."
+                                    vm.message.value = "File uploads are turned off in ReadStash's browser."
                                     return true
                                 }
                                 override fun onCreateWindow(view: WebView?, isDialog: Boolean, isUserGesture: Boolean, resultMsg: Message?): Boolean = false
@@ -409,8 +411,8 @@ fun BrowserScreen(initialUrl: String?, nav: (String) -> Unit, back: () -> Unit, 
             title = { Text(if (d.isPdf) "PDF document" else "Download file?") },
             text = {
                 Text("${d.fileName}\nfrom ${UrlSafety.hostOf(d.url)}\n\n" +
-                    if (d.isPdf) "Open it in Folio's PDF reader? It will be saved to your library with its source link, so it stays available offline."
-                    else "Folio saves documents and images to your library. Other file types, such as apps and archives, are refused for your safety.")
+                    if (d.isPdf) "Open it in ReadStash's PDF reader? It will be saved to your library with its source link, so it stays available offline."
+                    else "ReadStash saves documents and images to your library. Other file types, such as apps and archives, are refused for your safety.")
             },
             confirmButton = { TextButton(onClick = { vm.startDownload(d, openWhenDone = true) }) { Text(if (d.isPdf) "Open in reader" else "Download & open") } },
             dismissButton = {
@@ -475,9 +477,9 @@ private fun StartPage(vm: BrowserViewModel, onOpen: (String) -> Unit, nav: (Stri
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         LazyColumn(contentPadding = PaddingValues(20.dp)) {
             item {
-                Text("Private browsing in Folio", style = MaterialTheme.typography.headlineSmall)
+                Text("Private browsing in ReadStash", style = MaterialTheme.typography.headlineSmall)
                 Spacer(Modifier.height(6.dp))
-                Text("HTTPS only · no trackers in documents · downloads go straight to your library. The browser is the only part of Folio that uses the internet.",
+                Text("HTTPS only · no trackers in documents · downloads go straight to your library. The browser is the only part of ReadStash that uses the internet.",
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(Modifier.height(16.dp))
                 OutlinedButton(onClick = { nav(Routes.BOOKMARKS) }) { Icon(Icons.Outlined.Bookmarks, null); Spacer(Modifier.width(8.dp)); Text("Your bookmarks") }

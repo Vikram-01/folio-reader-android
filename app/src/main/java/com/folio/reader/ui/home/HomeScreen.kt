@@ -76,7 +76,7 @@ fun HomeScreen(nav: (String) -> Unit, onImport: () -> Unit, onSaveLink: () -> Un
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Folio", style = MaterialTheme.typography.headlineMedium) },
+                title = { Text("ReadStash", style = MaterialTheme.typography.headlineMedium) },
                 actions = {
                     IconButton(onClick = { nav(Routes.browser()) }) { Icon(Icons.Outlined.Public, "Browser") }
                     IconButton(onClick = { nav(Routes.SETTINGS) }) { Icon(Icons.Outlined.Settings, "Settings") }
@@ -93,7 +93,7 @@ fun HomeScreen(nav: (String) -> Unit, onImport: () -> Unit, onSaveLink: () -> Un
                     QuickAction("Save a link", "Bookmarks, offline", Icons.Outlined.AddLink, MaterialTheme.colorScheme.secondaryContainer, Modifier.weight(1f), onSaveLink)
                 }
                 Row(Modifier.padding(horizontal = 16.dp).padding(bottom = 12.dp)) {
-                    QuickAction("Open a file", "Just read it — nothing is saved to Folio", Icons.Outlined.FileOpen,
+                    QuickAction("Open a file", "Just read it — nothing is saved to ReadStash", Icons.Outlined.FileOpen,
                         MaterialTheme.colorScheme.tertiaryContainer, Modifier.weight(1f), onOpenOnce)
                 }
             }

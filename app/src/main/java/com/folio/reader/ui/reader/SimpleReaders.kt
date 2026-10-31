@@ -75,7 +75,7 @@ fun TextReader(
                 }
             }
             if (truncated) item {
-                Text("This file is larger than Folio displays at once; only the first part is shown. The whole file is kept in your library and can be exported.",
+                Text("This file is larger than ReadStash displays at once; only the first part is shown. The whole file is kept in your library and can be exported.",
                     style = MaterialTheme.typography.bodySmall, color = colors.muted, modifier = Modifier.padding(top = 24.dp))
             }
         }

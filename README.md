@@ -1,8 +1,8 @@
-# Folio
+# ReadStash
 
 An offline-first Android reader, document library and bookmark manager.
 
-Folio keeps a permanent library of your documents (PDF, EPUB, text, data files and images), a Raindrop-style bookmark manager with nested collections and tags, a hardened in-app browser, and full-text search across all of it. Everything is stored on the device. The in-app browser is the only part of the app that uses the network.
+ReadStash keeps a permanent library of your documents (PDF, EPUB, text, data files and images), a Raindrop-style bookmark manager with nested collections and tags, a hardened in-app browser, and full-text search across all of it. Everything is stored on the device. The in-app browser is the only part of the app that uses the network.
 
 ## What works in v1.0
 
@@ -45,7 +45,7 @@ Release builds read their key from environment variables:
 
 Without them the release build is signed with the debug key so it still builds; don't distribute that APK.
 
-In GitHub Actions, the same values come from repository secrets. The keystore is committed AES-256 encrypted as `signing/folio-release.jks.gpg` and decrypted with `FOLIO_KEYSTORE_PASSWORD`; a `FOLIO_KEYSTORE_B64` secret, if set, takes precedence. The workflow in `.github/workflows/build.yml` runs the tests, builds the debug APK, release APK and release AAB, checks the signature, fails if any permission outside the allowlist in `docs/SECURITY.md` appears, and uploads the files as the `folio-builds` artifact.
+In GitHub Actions, the same values come from repository secrets. The keystore is committed AES-256 encrypted as `signing/folio-release.jks.gpg` and decrypted with `FOLIO_KEYSTORE_PASSWORD`; a `FOLIO_KEYSTORE_B64` secret, if set, takes precedence. The workflow in `.github/workflows/build.yml` runs the tests, builds the debug APK, release APK and release AAB, checks the signature, fails if any permission outside the allowlist in `docs/SECURITY.md` appears, and uploads the files as the `readstash-builds` artifact.
 
 ## Project layout
 
