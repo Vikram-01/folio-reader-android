@@ -1,7 +1,7 @@
 package com.folio.reader.core.format
 
 /** How a format is displayed. */
-enum class ReaderKind { PDF, EPUB, TEXT, MARKDOWN, HTML, TABLE, IMAGE }
+enum class ReaderKind { PDF, EPUB, TEXT, MARKDOWN, HTML, TABLE, IMAGE, OFFICE }
 
 /**
  * Every format Folio knows about. [supported] = false means the format is
@@ -33,13 +33,15 @@ enum class DocFormat(
     GIF("GIF", setOf("gif"), "image/gif", ReaderKind.IMAGE),
     BMP("BMP", setOf("bmp"), "image/bmp", ReaderKind.IMAGE),
 
+    // Office Open XML: text, tables and slide text are shown (layout and images are not).
+    DOCX("Word", setOf("docx"), "application/vnd.openxmlformats-officedocument.wordprocessingml.document", ReaderKind.OFFICE),
+    XLSX("Excel", setOf("xlsx", "xlsm"), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", ReaderKind.OFFICE),
+    PPTX("PowerPoint", setOf("pptx"), "application/vnd.openxmlformats-officedocument.presentationml.presentation", ReaderKind.OFFICE),
+
     // Recognised but not yet readable in this version.
     DOC("Word 97", setOf("doc"), "application/msword", null),
-    DOCX("Word", setOf("docx"), "application/vnd.openxmlformats-officedocument.wordprocessingml.document", null),
     XLS("Excel 97", setOf("xls"), "application/vnd.ms-excel", null),
-    XLSX("Excel", setOf("xlsx", "xlsm"), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", null),
     PPT("PowerPoint 97", setOf("ppt"), "application/vnd.ms-powerpoint", null),
-    PPTX("PowerPoint", setOf("pptx"), "application/vnd.openxmlformats-officedocument.presentationml.presentation", null),
     ODF("OpenDocument", setOf("odt", "ods", "odp"), "application/vnd.oasis.opendocument.text", null),
     MOBI("Kindle", setOf("mobi", "azw", "azw3"), "application/x-mobipocket-ebook", null),
     FB2("FictionBook", setOf("fb2"), "application/x-fictionbook+xml", null),
@@ -63,6 +65,7 @@ enum class DocFormat(
                 m == "text/xml" -> XML
                 m == "text/x-markdown" -> MARKDOWN
                 m == "application/x-yaml" || m == "text/yaml" -> YAML
+                m == "application/xhtml+xml" -> HTML
                 m == "text/rtf" -> RTF
                 else -> null
             }
@@ -70,6 +73,7 @@ enum class DocFormat(
 
         val supportedMimeTypes: Array<String> =
             arrayOf("application/pdf", "application/epub+zip", "text/*", "image/*", "application/json",
-                "application/xml", "application/rtf", "application/yaml", "application/octet-stream")
+                "application/xml", "application/rtf", "application/yaml", "application/xhtml+xml",
+                DOCX.mime, XLSX.mime, PPTX.mime, "application/octet-stream")
     }
 }

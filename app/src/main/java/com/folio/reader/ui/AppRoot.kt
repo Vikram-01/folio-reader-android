@@ -77,6 +77,10 @@ fun AppRoot(vm: MainViewModel, prefs: UserPrefs) {
         vm.importUris(uris)
     }
     val onImport = { importLauncher.launch(DocFormat.supportedMimeTypes) }
+    val viewOnceLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri?.let { vm.openViewer(it) }
+    }
+    val onOpenOnce = { viewOnceLauncher.launch(DocFormat.supportedMimeTypes) }
     val onSaveLink = { vm.startLinkDraft() }
 
     LaunchedEffect(Unit) {
@@ -153,7 +157,7 @@ fun AppRoot(vm: MainViewModel, prefs: UserPrefs) {
                     popEnterTransition = { fadeIn() },
                     popExitTransition = { fadeOut() + slideOutHorizontally { it / 12 } },
                 ) {
-                    composable(Routes.HOME) { HomeScreen(navigate, onImport, onSaveLink) }
+                    composable(Routes.HOME) { HomeScreen(navigate, onImport, onSaveLink, onOpenOnce) }
                     composable(Routes.DOCUMENTS) { DocumentsScreen(navigate, onImport) }
                     composable(Routes.BOOKMARKS) { BookmarksScreen(navigate, onSaveLink) }
                     composable(Routes.COLLECTIONS) { CollectionsScreen(navigate) }
@@ -174,6 +178,9 @@ fun AppRoot(vm: MainViewModel, prefs: UserPrefs) {
                     }
                     composable(Routes.OFFLINE, arguments = listOf(navArgument("id") { type = NavType.LongType })) {
                         OfflinePageScreen(it.arguments!!.getLong("id"), navigate, back = { nav.popBackStack() })
+                    }
+                    composable(Routes.VIEW, arguments = listOf(navArgument("uri") { type = NavType.StringType; nullable = true; defaultValue = null })) {
+                        com.folio.reader.ui.viewer.ViewerScreen(navigate, back = { nav.popBackStack() })
                     }
                     composable(Routes.DOWNLOADS) { DownloadsScreen(navigate, back = { nav.popBackStack() }) }
                     composable(Routes.HISTORY) { HistoryScreen(navigate, back = { nav.popBackStack() }) }

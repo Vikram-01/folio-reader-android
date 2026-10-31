@@ -8,7 +8,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.folio.reader.core.format.DocFormat
 import com.folio.reader.core.format.ReaderKind
-import com.folio.reader.core.security.Limits
 import com.folio.reader.data.db.AnnotationDao
 import com.folio.reader.data.db.AnnotationEntity
 import com.folio.reader.data.db.AnnotationKind
@@ -35,13 +34,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import org.commonmark.ext.gfm.tables.TablesExtension
-import org.commonmark.parser.Parser
-import org.commonmark.renderer.html.HtmlRenderer
 import org.jsoup.Jsoup
-import org.jsoup.safety.Safelist
 import java.io.File
 import java.util.Locale
 import javax.inject.Inject
@@ -51,12 +44,13 @@ sealed interface ReaderContent {
     data object Loading : ReaderContent
     data class Failed(val message: String) : ReaderContent
     data class Unsupported(val format: DocFormat) : ReaderContent
-    data class Pdf(val file: File, val pageCount: Int) : ReaderContent
+    data class Pdf(val source: PdfSource, val pageCount: Int) : ReaderContent
     data class Epub(val book: EpubBook) : ReaderContent
     data class Text(val lines: List<String>, val mono: Boolean, val truncated: Boolean) : ReaderContent
     data class Html(val html: String) : ReaderContent
     data class Table(val rows: List<List<String>>, val truncated: Boolean) : ReaderContent
-    data class Image(val file: File) : ReaderContent
+    /** A File (library) or a content:// Uri (viewed in place). */
+    data class Image(val model: Any) : ReaderContent
 }
 
 data class Position(val position: Int, val offset: Float, val fraction: Float)
@@ -121,35 +115,16 @@ class ReaderViewModel @Inject constructor(
         return try {
             when (format.kind) {
                 ReaderKind.PDF -> PdfDocumentHolder.pageCount(file).let { n ->
-                    if (n > 0) ReaderContent.Pdf(file, n) else ReaderContent.Failed("This PDF has no pages.")
+                    if (n > 0) ReaderContent.Pdf(PdfSource.FromFile(file), n) else ReaderContent.Failed("This PDF has no pages.")
                 }
                 ReaderKind.EPUB -> EpubBook.open(file, File(files.epubCacheDir, d.id.toString()).apply { mkdirs() }).let { b ->
                     if (b.chapters.isNotEmpty()) ReaderContent.Epub(b) else ReaderContent.Failed("This EPUB has no readable chapters.")
                 }
-                ReaderKind.TEXT -> {
+                ReaderKind.TEXT, ReaderKind.MARKDOWN, ReaderKind.HTML, ReaderKind.TABLE -> {
                     val (raw, truncated) = TextFormats.readText(file)
-                    var text = if (format == DocFormat.RTF) TextFormats.rtfToPlain(raw) else raw
-                    if (format == DocFormat.JSON && text.length < 4_000_000) {
-                        text = runCatching { prettyJson.encodeToString(JsonElement.serializer(), Json.parseToJsonElement(text)) }.getOrDefault(text)
-                    }
-                    ReaderContent.Text(text.lines(), format != DocFormat.TXT && format != DocFormat.RTF, truncated)
+                    ContentBuilder.fromText(format, raw, truncated)
                 }
-                ReaderKind.MARKDOWN -> {
-                    val (raw, _) = TextFormats.readText(file)
-                    val ext = listOf(TablesExtension.create())
-                    val html = HtmlRenderer.builder().extensions(ext).build().render(Parser.builder().extensions(ext).build().parse(raw))
-                    ReaderContent.Html(Jsoup.clean(html, Safelist.relaxed().removeTags("img")))
-                }
-                ReaderKind.HTML -> {
-                    val (raw, _) = TextFormats.readText(file)
-                    val body = Jsoup.parse(raw).body()?.html() ?: ""
-                    ReaderContent.Html(Jsoup.clean(body, Safelist.relaxed().removeTags("img")))
-                }
-                ReaderKind.TABLE -> {
-                    val (raw, truncated) = TextFormats.readText(file)
-                    val rows = TextFormats.parseDelimited(raw, if (format == DocFormat.TSV) '\t' else ',')
-                    ReaderContent.Table(rows, truncated || rows.size >= Limits.MAX_TABLE_ROWS)
-                }
+                ReaderKind.OFFICE -> file.inputStream().buffered().use { ContentBuilder.fromOffice(format, it) }
                 ReaderKind.IMAGE -> ReaderContent.Image(file)
                 null -> ReaderContent.Unsupported(format)
             }
@@ -203,6 +178,7 @@ class ReaderViewModel @Inject constructor(
     fun setTheme(t: ReaderTheme) = viewModelScope.launch { prefsRepo.setReaderTheme(t) }
     fun setFontScale(v: Float) = viewModelScope.launch { prefsRepo.setReaderFontScale(v) }
     fun setKeepScreenOn(v: Boolean) = viewModelScope.launch { prefsRepo.setKeepScreenOn(v) }
+    fun setPdfBookMode(v: Boolean) = viewModelScope.launch { prefsRepo.setPdfBookMode(v) }
 
     // ---- Text to speech (Android's on-device engine; nothing is sent anywhere by Folio) ----
 
@@ -251,8 +227,5 @@ class ReaderViewModel @Inject constructor(
         appScope.launch(Dispatchers.IO) { library.saveProgress(docId, p.position, p.offset, p.fraction) }
     }
 
-    companion object {
-        private val prettyJson = Json { prettyPrint = true }
-    }
 }
 

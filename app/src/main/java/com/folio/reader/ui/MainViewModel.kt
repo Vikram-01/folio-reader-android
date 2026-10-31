@@ -94,6 +94,9 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    /** Opens a file from another app in the read-only viewer. Nothing is copied or recorded. */
+    fun openViewer(uri: Uri) { _events.trySend(UiEvent.Navigate(Routes.view(uri))) }
+
     fun resolveDuplicate(importAnyway: Boolean) {
         val (uri, existing) = _duplicate.value ?: return
         _duplicate.value = null

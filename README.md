@@ -8,9 +8,11 @@ Folio keeps a permanent library of your documents (PDF, EPUB, text, data files a
 
 | Area | Status |
 |---|---|
-| PDF reader | Android's built-in PDFium renderer: lazy page rendering, pinch / double-tap zoom, page thumbnails, page bookmarks and notes, night/sepia tint, read aloud |
+| PDF reader | Android's built-in PDFium renderer: book view with page turns (two-page spreads in landscape) or continuous scroll, remembered; lazy page rendering, pinch / double-tap zoom, page thumbnails, page bookmarks and notes, night/sepia tint, read aloud |
 | EPUB 2/3 reader | Chapter view with table of contents, font size, light/sepia/dark themes, progress per chapter |
+| Office | DOCX (text, headings, lists, tables), XLSX (every sheet as a table), PPTX (slide text) — parsed in-app, no Office libraries |
 | Text & data | TXT, LOG, JSON (pretty-printed), XML, YAML, RTF (converted to text), Markdown, HTML, CSV/TSV table view |
+| Open without saving | "Open with Folio" or Home → Open a file shows a file read-only from its source; nothing is copied or recorded |
 | Images | JPEG, PNG, WebP, GIF (animated), BMP with zoom |
 | Library | Import via system picker / share sheet / "Open with", copied into private storage, duplicate detection (SHA-256), nested folders, collections, tags, favorites, rename, export, delete with confirmation |
 | Bookmarks | Save from any app's share sheet, notes, tags, nested collections, favorites, duplicate URL detection, bulk move/favorite/delete, HTML import/export (Chrome/Firefox/Raindrop format), offline copies |
@@ -18,7 +20,7 @@ Folio keeps a permanent library of your documents (PDF, EPUB, text, data files a
 | Search | On-device SQLite FTS4 index over PDF pages, EPUB chapters, text/CSV, saved pages, plus titles, URLs, notes, tags and collections; filters for type, collection, folder, tags, dates, favorites, offline |
 | Backup | Single-file backup with optional AES-256-GCM password encryption; restore merges and never deletes |
 
-Not in this version (recognised, stored, and exportable, but not displayed): DOC/DOCX, XLS/XLSX/XLSM, PPT/PPTX, ODT/ODS/ODP, MOBI/AZW3, FB2, DjVu, TIFF, password-protected PDFs. See [docs/FORMAT_COMPATIBILITY.md](docs/FORMAT_COMPATIBILITY.md).
+Not in this version (recognised, stored, and exportable, but not displayed): legacy DOC/XLS/PPT, ODT/ODS/ODP, MOBI/AZW3, FB2, DjVu, TIFF, password-protected PDFs. See [docs/FORMAT_COMPATIBILITY.md](docs/FORMAT_COMPATIBILITY.md).
 
 ## Building
 

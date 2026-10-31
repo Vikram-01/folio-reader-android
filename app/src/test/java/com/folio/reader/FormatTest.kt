@@ -26,9 +26,17 @@ class FormatTest {
         assertTrue(FormatDetector.detect(byteArrayOf(0, 1, 2, 3, 0, 0), "data.txt", null) is Result.Rejected)
     }
 
-    @Test fun recognisesUnsupportedOffice() {
-        val docx = byteArrayOf(0x50, 0x4B, 0x03, 0x04) + ByteArray(40)
-        assertTrue(FormatDetector.detect(docx, "report.docx", null) is Result.Unsupported)
+    @Test fun recognisesOffice() {
+        val zip = byteArrayOf(0x50, 0x4B, 0x03, 0x04) + ByteArray(40)
+        assertEquals(DocFormat.DOCX, ok(FormatDetector.detect(zip, "report.docx", null)))
+        assertEquals(DocFormat.XLSX, ok(FormatDetector.detect(zip, "budget.xlsx", null)))
+        assertEquals(DocFormat.PPTX, ok(FormatDetector.detect(zip, "talk.pptx", null)))
+        // Unnamed Office package recognised from its part folders.
+        val unnamed = byteArrayOf(0x50, 0x4B, 0x03, 0x04) + ByteArray(26) + "word/document.xml".toByteArray()
+        assertEquals(DocFormat.DOCX, ok(FormatDetector.detect(unnamed, null, null)))
+        // Legacy binary Office is recognised but has no viewer.
+        val ole = byteArrayOf(0xD0.toByte(), 0xCF.toByte(), 0x11, 0xE0.toByte()) + ByteArray(40)
+        assertTrue(FormatDetector.detect(ole, "old.doc", null) is Result.Unsupported)
     }
 
     @Test fun textFormats() {

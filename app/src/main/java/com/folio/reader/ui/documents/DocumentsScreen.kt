@@ -100,7 +100,7 @@ class DocumentsViewModel @Inject constructor(
                 TypeFilter.ALL -> true
                 TypeFilter.PDF -> fmt == DocFormat.PDF
                 TypeFilter.BOOKS -> fmt?.kind == ReaderKind.EPUB
-                TypeFilter.TEXT -> fmt?.kind in setOf(ReaderKind.TEXT, ReaderKind.MARKDOWN, ReaderKind.HTML, ReaderKind.TABLE)
+                TypeFilter.TEXT -> fmt?.kind in setOf(ReaderKind.TEXT, ReaderKind.MARKDOWN, ReaderKind.HTML, ReaderKind.TABLE, ReaderKind.OFFICE)
                 TypeFilter.IMAGES -> fmt?.kind == ReaderKind.IMAGE
                 TypeFilter.STORED -> fmt?.supported != true
             }

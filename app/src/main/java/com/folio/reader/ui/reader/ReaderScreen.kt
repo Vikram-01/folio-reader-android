@@ -14,6 +14,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
+import androidx.compose.material.icons.automirrored.outlined.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -93,7 +94,7 @@ fun ReaderScreen(nav: (String) -> Unit, back: () -> Unit, vm: ReaderViewModel = 
                         Button(onClick = { sheet = Sheet.DETAILS }) { Text("Details & export") }
                     }
                 }
-                c is ReaderContent.Pdf -> PdfReader(c.file, c.pageCount, start.position, prefs.readerTheme, jump, vm::consumeJump,
+                c is ReaderContent.Pdf -> PdfReader(c.source, c.pageCount, start.position, prefs.readerTheme, prefs.pdfBookMode, jump, vm::consumeJump,
                     onPage = { p -> vm.report(Position(p, 0f, (p + 1f) / c.pageCount)) }, onTap = { chrome = !chrome })
                 c is ReaderContent.Epub -> Box(Modifier.fillMaxSize().systemBarsPadding()) {
                     val chapter = jump ?: pos.position.coerceIn(0, c.book.chapters.lastIndex)
@@ -118,7 +119,7 @@ fun ReaderScreen(nav: (String) -> Unit, back: () -> Unit, vm: ReaderViewModel = 
                     LaunchedEffect(Unit) { vm.report(Position(0, 0f, 1f)) }
                 }
                 c is ReaderContent.Image -> {
-                    ImageReader(c.file, colors) { chrome = !chrome }
+                    ImageReader(c.model, colors) { chrome = !chrome }
                     LaunchedEffect(Unit) { vm.report(Position(0, 0f, 1f)) }
                 }
             }
@@ -132,6 +133,12 @@ fun ReaderScreen(nav: (String) -> Unit, back: () -> Unit, vm: ReaderViewModel = 
                             Text(doc?.title ?: "", style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             if (total > 1) Text(label(pos.position) + " · ${(pos.fraction * 100).toInt()}%", style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                        if (c is ReaderContent.Pdf) {
+                            IconButton(onClick = { vm.setPdfBookMode(!prefs.pdfBookMode) }) {
+                                Icon(if (prefs.pdfBookMode) Icons.Outlined.ViewDay else Icons.AutoMirrored.Outlined.MenuBook,
+                                    if (prefs.pdfBookMode) "Switch to scroll view" else "Switch to book view")
+                            }
                         }
                         if (c is ReaderContent.Pdf || c is ReaderContent.Epub || c is ReaderContent.Text || c is ReaderContent.Table) {
                             IconButton(onClick = { sheet = Sheet.SEARCH }) { Icon(Icons.Outlined.Search, "Search in document") }
@@ -186,7 +193,7 @@ fun ReaderScreen(nav: (String) -> Unit, back: () -> Unit, vm: ReaderViewModel = 
         else -> ModalBottomSheet(onDismissRequest = { sheet = Sheet.NONE }) {
             when (sheet) {
                 Sheet.CONTENTS -> when (c) {
-                    is ReaderContent.Pdf -> PdfThumbnails(c.file, c.pageCount, pos.position) { vm.requestJump(it); sheet = Sheet.NONE }
+                    is ReaderContent.Pdf -> PdfThumbnails(c.source, c.pageCount, pos.position) { vm.requestJump(it); sheet = Sheet.NONE }
                     is ReaderContent.Epub -> LazyColumn(Modifier.heightIn(max = 560.dp)) {
                         items(c.book.toc) { t ->
                             ListItem(modifier = Modifier.clickable { vm.requestJump(t.chapterIndex); sheet = Sheet.NONE }.padding(start = (t.depth.coerceIn(0, 4) * 16).dp),
@@ -226,6 +233,15 @@ fun ReaderScreen(nav: (String) -> Unit, back: () -> Unit, vm: ReaderViewModel = 
                         Slider(prefs.readerFontScale, { vm.setFontScale(it) }, valueRange = 0.7f..2.0f, steps = 12)
                     } else Text("PDF pages are shown as printed; the theme tints pages for comfortable night reading.", style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (c is ReaderContent.Pdf) {
+                        Text("PDF layout", style = MaterialTheme.typography.labelLarge)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FilterChip(prefs.pdfBookMode, { vm.setPdfBookMode(true) }, { Text("Book") },
+                                leadingIcon = { Icon(Icons.AutoMirrored.Outlined.MenuBook, null, Modifier.size(18.dp)) })
+                            FilterChip(!prefs.pdfBookMode, { vm.setPdfBookMode(false) }, { Text("Scroll") },
+                                leadingIcon = { Icon(Icons.Outlined.ViewDay, null, Modifier.size(18.dp)) })
+                        }
+                    }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("Keep screen on while reading", Modifier.weight(1f)); Switch(prefs.keepScreenOn, { vm.setKeepScreenOn(it) })
                     }

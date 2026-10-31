@@ -31,6 +31,10 @@ object FormatDetector {
             sniffed == Sniff.ZIP -> when {
                 isEpub(header) -> DocFormat.EPUB
                 claimed != null && claimed in ZIP_CONTAINERS -> claimed
+                // No usable name/MIME: Office packages name their part folders in the zip headers.
+                indexOf(header, "word/".toByteArray(), header.size) >= 0 -> DocFormat.DOCX
+                indexOf(header, "xl/".toByteArray(), header.size) >= 0 -> DocFormat.XLSX
+                indexOf(header, "ppt/".toByteArray(), header.size) >= 0 -> DocFormat.PPTX
                 else -> return Result.Rejected("This archive isn't a supported document.")
             }
             sniffed == Sniff.OLE -> if (claimed == DocFormat.XLS || claimed == DocFormat.PPT) claimed ?: DocFormat.DOC else DocFormat.DOC

@@ -125,7 +125,7 @@ fun TableReader(rows: List<List<String>>, truncated: Boolean, colors: ReaderColo
 }
 
 @Composable
-fun ImageReader(file: File, colors: ReaderColors, onTap: () -> Unit) {
+fun ImageReader(model: Any, colors: ReaderColors, onTap: () -> Unit) {
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
     val ctx = androidx.compose.ui.platform.LocalContext.current
@@ -140,7 +140,7 @@ fun ImageReader(file: File, colors: ReaderColors, onTap: () -> Unit) {
             .pointerInput(Unit) { detectTapGestures(onTap = { onTap() }, onDoubleTap = { if (scale > 1f) { scale = 1f; offset = Offset.Zero } else scale = 2.5f }) },
     ) {
         AsyncImage(
-            model = ImageRequest.Builder(ctx).data(file).size(4096).build(),
+            model = ImageRequest.Builder(ctx).data(model).size(4096).build(),
             contentDescription = null,
             modifier = Modifier.fillMaxSize().graphicsLayer { scaleX = scale; scaleY = scale; translationX = offset.x; translationY = offset.y },
         )

@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.folio.reader.data.files.PdfLock
@@ -51,9 +52,10 @@ import java.io.File
  * native code shipped). One page is open at a time and every call goes
  * through [PdfLock], because the renderer is not thread-safe.
  */
-class PdfDocumentHolder(file: File) : Closeable {
-    private val pfd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
-    private val renderer = PdfRenderer(pfd)
+class PdfDocumentHolder(private val pfd: ParcelFileDescriptor) : Closeable {
+    constructor(file: File) : this(ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY))
+
+    private val renderer = try { PdfRenderer(pfd) } catch (e: Throwable) { runCatching { pfd.close() }; throw e }
     val pageCount: Int = renderer.pageCount
     private val sizes = HashMap<Int, Pair<Int, Int>>()
     private val maxBytes = (Runtime.getRuntime().maxMemory() / 6).toInt()
@@ -62,8 +64,9 @@ class PdfDocumentHolder(file: File) : Closeable {
     }
     @Volatile private var closed = false
 
-    fun size(page: Int): Pair<Int, Int> = sizes[page] ?: PdfLock.withLock {
-        if (closed) 1 to 1 else renderer.openPage(page).use { (it.width to it.height).also { s -> sizes[page] = s } }
+    fun size(page: Int): Pair<Int, Int> = PdfLock.withLock {
+        sizes[page] ?: if (closed || page !in 0 until pageCount) 1 to 1
+        else renderer.openPage(page).use { (it.width to it.height).also { s -> sizes[page] = s } }
     }
 
     /** Renders [page] [width] pixels wide. Cached; returns null once closed. */
@@ -95,8 +98,11 @@ class PdfDocumentHolder(file: File) : Closeable {
     }
 
     companion object {
-        fun pageCount(file: File): Int = PdfLock.withLock {
-            ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY).use { pfd -> PdfRenderer(pfd).use { it.pageCount } }
+        fun pageCount(file: File): Int = pageCount(ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY))
+
+        /** Counts pages and closes [pfd]. */
+        fun pageCount(pfd: ParcelFileDescriptor): Int = PdfLock.withLock {
+            pfd.use { PdfRenderer(it).use { r -> r.pageCount } }
         }
     }
 }
@@ -118,7 +124,30 @@ fun readerColorFilter(theme: ReaderTheme): ColorFilter? = when (theme) {
 
 @Composable
 fun PdfReader(
-    file: File,
+    source: PdfSource,
+    pageCount: Int,
+    initialPage: Int,
+    theme: ReaderTheme,
+    bookMode: Boolean,
+    jump: Int?,
+    onJumped: () -> Unit,
+    onPage: (Int) -> Unit,
+    onTap: () -> Unit,
+) {
+    val context = LocalContext.current
+    val holder = remember(source) { PdfDocumentHolder(source.open(context)) }
+    DisposableEffect(holder) { onDispose { holder.close() } }
+    if (bookMode) {
+        PdfBookReader(holder, pageCount, initialPage, theme, jump, onJumped, onPage, onTap)
+    } else {
+        PdfScrollReader(holder, pageCount, initialPage, theme, jump, onJumped, onPage, onTap)
+    }
+}
+
+/** Continuous vertical scrolling, one page under the next. */
+@Composable
+private fun PdfScrollReader(
+    holder: PdfDocumentHolder,
     pageCount: Int,
     initialPage: Int,
     theme: ReaderTheme,
@@ -127,8 +156,6 @@ fun PdfReader(
     onPage: (Int) -> Unit,
     onTap: () -> Unit,
 ) {
-    val holder = remember(file) { PdfDocumentHolder(file) }
-    DisposableEffect(holder) { onDispose { holder.close() } }
     val list = rememberLazyListState(initialFirstVisibleItemIndex = initialPage.coerceIn(0, (pageCount - 1).coerceAtLeast(0)))
     var scale by remember { mutableFloatStateOf(1f) }
     var offsetX by remember { mutableFloatStateOf(0f) }
@@ -203,8 +230,9 @@ fun PdfReader(
 }
 
 @Composable
-fun PdfThumbnails(file: File, pageCount: Int, current: Int, onPick: (Int) -> Unit) {
-    val holder = remember(file) { PdfDocumentHolder(file) }
+fun PdfThumbnails(source: PdfSource, pageCount: Int, current: Int, onPick: (Int) -> Unit) {
+    val context = LocalContext.current
+    val holder = remember(source) { PdfDocumentHolder(source.open(context)) }
     DisposableEffect(holder) { onDispose { holder.close() } }
     val grid = rememberLazyGridState(initialFirstVisibleItemIndex = current.coerceIn(0, (pageCount - 1).coerceAtLeast(0)))
     LazyVerticalGrid(GridCells.Adaptive(96.dp), state = grid, contentPadding = PaddingValues(12.dp),

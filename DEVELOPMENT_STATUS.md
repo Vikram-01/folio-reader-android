@@ -6,7 +6,7 @@ Last updated: 2026-10-30
 |---|---|---|---|
 | 1 | Architecture & database | Done | Hilt, Room (15 tables + FTS4), DataStore, WorkManager |
 | 2 | Document import & storage | Done | SAF import, share/open-with, signature detection, SHA-256 duplicates, private storage, folders, tags, collections, export |
-| 3 | PDF & Office readers | PDF done; Office not started | Office formats are stored and exportable only |
+| 3 | PDF & Office readers | Done (OOXML) | PDF book + scroll views; DOCX/XLSX/PPTX text viewers. Legacy DOC/XLS/PPT stored only |
 | 4 | Ebook readers | EPUB done; MOBI/AZW3/FB2/DjVu not started | |
 | 5 | Bookmark management | Done | Share sheet, collections, tags, notes, favorites, bulk actions, HTML import/export, duplicate detection |
 | 6 | In-app browser | Done | Tabs, history, downloads to library, PDF links into reader, reader mode, offline save, find, zoom, external open |
@@ -18,7 +18,7 @@ Last updated: 2026-10-30
 ## Next up
 
 1. Verify the APK on physical devices (Android 8 → 15) and fix issues found.
-2. DOCX/XLSX/PPTX text-mode viewers (Apache POI is too heavy for Android; evaluate a streaming OOXML text extractor).
+2. Images inside DOCX/PPTX; legacy binary DOC/XLS/PPT.
 3. Text selection highlights in EPUB/text readers.
 4. Instrumented UI tests (Compose) on an emulator in CI.
 5. Performance pass with 2,000+ page PDFs and 10k+ bookmarks.

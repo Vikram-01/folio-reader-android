@@ -62,7 +62,7 @@ class HomeViewModel @Inject constructor(library: LibraryRepository, bookmarks: B
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(nav: (String) -> Unit, onImport: () -> Unit, onSaveLink: () -> Unit, vm: HomeViewModel = hiltViewModel()) {
+fun HomeScreen(nav: (String) -> Unit, onImport: () -> Unit, onSaveLink: () -> Unit, onOpenOnce: () -> Unit, vm: HomeViewModel = hiltViewModel()) {
     val cont by vm.continueReading.collectAsStateWithLifecycle()
     val opened by vm.recentlyOpened.collectAsStateWithLifecycle()
     val added by vm.recentlyAdded.collectAsStateWithLifecycle()
@@ -89,8 +89,12 @@ fun HomeScreen(nav: (String) -> Unit, onImport: () -> Unit, onSaveLink: () -> Un
                 Text(greeting(), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 20.dp))
                 Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    QuickAction("Import files", "PDF, EPUB, text, images", Icons.Outlined.FileUpload, MaterialTheme.colorScheme.primaryContainer, Modifier.weight(1f), onImport)
+                    QuickAction("Import files", "PDF, EPUB, Office, text", Icons.Outlined.FileUpload, MaterialTheme.colorScheme.primaryContainer, Modifier.weight(1f), onImport)
                     QuickAction("Save a link", "Bookmarks, offline", Icons.Outlined.AddLink, MaterialTheme.colorScheme.secondaryContainer, Modifier.weight(1f), onSaveLink)
+                }
+                Row(Modifier.padding(horizontal = 16.dp).padding(bottom = 12.dp)) {
+                    QuickAction("Open a file", "Just read it — nothing is saved to Folio", Icons.Outlined.FileOpen,
+                        MaterialTheme.colorScheme.tertiaryContainer, Modifier.weight(1f), onOpenOnce)
                 }
             }
 

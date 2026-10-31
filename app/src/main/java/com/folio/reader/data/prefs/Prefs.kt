@@ -32,6 +32,8 @@ data class UserPrefs(
     val readerTheme: ReaderTheme = ReaderTheme.LIGHT,
     val readerFontScale: Float = 1f,
     val keepScreenOn: Boolean = true,
+    /** PDFs open as a book (page turns) rather than a continuous scroll. Remembered permanently. */
+    val pdfBookMode: Boolean = true,
     val docLayout: LayoutMode = LayoutMode.GRID,
     val docSort: DocSort = DocSort.RECENT_ADDED,
     val bookmarkLayout: LayoutMode = LayoutMode.LIST,
@@ -54,6 +56,7 @@ class PrefsRepository @Inject constructor(@ApplicationContext private val contex
         val readerTheme = stringPreferencesKey("reader_theme")
         val fontScale = floatPreferencesKey("reader_font_scale")
         val keepOn = booleanPreferencesKey("keep_screen_on")
+        val pdfBook = booleanPreferencesKey("pdf_book_mode")
         val docLayout = stringPreferencesKey("doc_layout")
         val docSort = stringPreferencesKey("doc_sort")
         val bmLayout = stringPreferencesKey("bookmark_layout")
@@ -78,6 +81,7 @@ class PrefsRepository @Inject constructor(@ApplicationContext private val contex
                 readerTheme = p.enum(K.readerTheme, d.readerTheme),
                 readerFontScale = (p[K.fontScale] ?: d.readerFontScale).coerceIn(0.6f, 2.5f),
                 keepScreenOn = p[K.keepOn] ?: d.keepScreenOn,
+                pdfBookMode = p[K.pdfBook] ?: d.pdfBookMode,
                 docLayout = p.enum(K.docLayout, d.docLayout),
                 docSort = p.enum(K.docSort, d.docSort),
                 bookmarkLayout = p.enum(K.bmLayout, d.bookmarkLayout),
@@ -95,6 +99,7 @@ class PrefsRepository @Inject constructor(@ApplicationContext private val contex
     suspend fun setReaderTheme(v: ReaderTheme) = context.dataStore.edit { it[K.readerTheme] = v.name }
     suspend fun setReaderFontScale(v: Float) = context.dataStore.edit { it[K.fontScale] = v.coerceIn(0.6f, 2.5f) }
     suspend fun setKeepScreenOn(v: Boolean) = context.dataStore.edit { it[K.keepOn] = v }
+    suspend fun setPdfBookMode(v: Boolean) = context.dataStore.edit { it[K.pdfBook] = v }
     suspend fun setDocLayout(v: LayoutMode) = context.dataStore.edit { it[K.docLayout] = v.name }
     suspend fun setDocSort(v: DocSort) = context.dataStore.edit { it[K.docSort] = v.name }
     suspend fun setBookmarkLayout(v: LayoutMode) = context.dataStore.edit { it[K.bmLayout] = v.name }

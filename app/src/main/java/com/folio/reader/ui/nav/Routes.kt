@@ -16,10 +16,13 @@ object Routes {
     const val DOWNLOADS = "downloads"
     const val HISTORY = "history"
     const val TAG = "tag/{id}"
+    /** Read-only viewer for a file from another app; nothing is copied into Folio. */
+    const val VIEW = "view?uri={uri}"
 
     fun collection(id: Long) = "collection/$id"
     fun tag(id: Long) = "tag/$id"
     fun reader(id: Long, pos: Int = -1) = "reader/$id?pos=$pos"
     fun browser(url: String? = null) = if (url == null) "browser" else "browser?url=${Uri.encode(url)}"
     fun offline(id: Long) = "offline/$id"
+    fun view(uri: Uri) = "view?uri=${Uri.encode(uri.toString())}"
 }

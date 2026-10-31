@@ -47,7 +47,7 @@ class FileStore @Inject constructor(@ApplicationContext private val context: Con
     }
 
     /** Private temp file; caller deletes it. */
-    fun newTempFile(suffix: String = ".tmp"): File = File.createTempFile("w", suffix, tmpDir)
+    fun newTempFile(suffix: String = ".tmp"): File = File.createTempFile("folio_", suffix, tmpDir)
 
     fun clearTemp() {
         tmpDir.listFiles()?.forEach { it.deleteRecursively() }

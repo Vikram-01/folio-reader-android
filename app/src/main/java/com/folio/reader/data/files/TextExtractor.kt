@@ -95,6 +95,14 @@ class TextExtractor @Inject constructor(
                     emit(TextBlock(i * 100, "Rows $first–${first + chunk.size - 1}", chunk.joinToString("\n") { it.joinToString(" · ") }))
                 }
             }
+            ReaderKind.OFFICE -> {
+                val parsed = file.inputStream().buffered().use { OfficeReader.parse(format, it) }
+                OfficeReader.plainBlocks(parsed).forEachIndexed { i, (label, text) ->
+                    coroutineContext.ensureActive()
+                    // Spreadsheet blocks are 100 rows each, so the location is the first row (used to jump there).
+                    emit(TextBlock(if (format == DocFormat.XLSX) i * 100 else 0, label, text))
+                }
+            }
             ReaderKind.IMAGE, null -> Unit
         }
     }

@@ -23,6 +23,23 @@ object TextFormats {
         return decode(bytes) to truncated
     }
 
+    /** Like [readText] but for a stream of unknown length (e.g. another app's content:// file). Reads at most [limit] bytes. */
+    fun readStream(input: java.io.InputStream, limit: Long = Limits.MAX_TEXT_LOAD_BYTES): Pair<String, Boolean> {
+        val out = java.io.ByteArrayOutputStream()
+        val buf = ByteArray(64 * 1024)
+        var total = 0L
+        var truncated = false
+        while (true) {
+            val n = input.read(buf)
+            if (n < 0) break
+            val keep = minOf(n.toLong(), limit - total).toInt()
+            if (keep > 0) out.write(buf, 0, keep)
+            total += keep
+            if (keep < n) { truncated = true; break }
+        }
+        return decode(out.toByteArray()) to truncated
+    }
+
     fun decode(bytes: ByteArray): String {
         if (bytes.size >= 3 && bytes[0] == 0xEF.toByte() && bytes[1] == 0xBB.toByte() && bytes[2] == 0xBF.toByte()) {
             return String(bytes, 3, bytes.size - 3, Charsets.UTF_8)
