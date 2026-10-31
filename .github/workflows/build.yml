@@ -75,6 +75,7 @@ jobs:
             "$BT/apksigner" verify --print-certs "$apk" | head -5
             "$BT/aapt2" dump permissions "$apk"
           done
+          echo "::notice title=Release signing certificate::$("$BT/apksigner" verify --print-certs app/build/outputs/apk/release/app-release.apk | grep 'SHA-256 digest' | head -1)"
           # Fail the build if anything outside the allowlist is requested.
           # INTERNET is declared by the app; the other four are merged in by WorkManager (background indexing).
           extra=$("$BT/aapt2" dump permissions app/build/outputs/apk/release/app-release.apk | grep "uses-permission" \
