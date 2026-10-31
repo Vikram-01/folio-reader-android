@@ -91,6 +91,19 @@ jobs:
           cp app/build/outputs/bundle/release/app-release.aab dist/Folio-release.aab
           ls -la dist
 
+      - name: Publish APKs to apk-builds branch
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/apk" && cd "$RUNNER_TEMP/apk"
+          cp "$GITHUB_WORKSPACE/dist/Folio-release.apk" "$GITHUB_WORKSPACE/dist/Folio-debug.apk" .
+          git init -q -b apk-builds
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add . && git commit -qm "APKs from ${GITHUB_SHA::7} (run ${GITHUB_RUN_ID})"
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" apk-builds
+
       - uses: actions/upload-artifact@v4
         with:
           name: folio-builds
