@@ -28,3 +28,7 @@
     public static int d(...);
     public static int i(...);
 }
+
+# LibreOffice document engine: JNI bridge classes are called from native code.
+-keep class org.libreoffice.kit.** { *; }
+-keep class com.folio.reader.data.office.OfficeConvertService { *; }

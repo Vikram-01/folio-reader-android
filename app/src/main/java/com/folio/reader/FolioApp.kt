@@ -34,6 +34,8 @@ class FolioApp : Application(), Configuration.Provider, ImageLoaderFactory {
     override fun onCreate() {
         super.onCreate()
         com.folio.reader.core.crash.CrashReporter.install(this)
+        // The document engine runs in its own process (":office"); it must not touch the app's working files.
+        if (!isMainProcess()) return
         if (BuildConfig.DEBUG) {
             StrictMode.setVmPolicy(
                 StrictMode.VmPolicy.Builder().detectLeakedClosableObjects().detectFileUriExposure().penaltyLog().build()
@@ -41,5 +43,11 @@ class FolioApp : Application(), Configuration.Provider, ImageLoaderFactory {
         }
         // Working files from a previous session are never needed again.
         Thread { runCatching { fileStore.clearTemp() } }.start()
+    }
+
+    private fun isMainProcess(): Boolean {
+        val name = if (Build.VERSION.SDK_INT >= 28) Application.getProcessName()
+            else runCatching { java.io.File("/proc/self/cmdline").readText().trim { it <= ' ' } }.getOrNull()
+        return name.isNullOrEmpty() || name == packageName
     }
 }

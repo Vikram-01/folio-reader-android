@@ -53,3 +53,13 @@ CI submits the Gradle dependency graph to GitHub (`gradle/actions/dependency-sub
 - The SQLite database itself is not encrypted; it relies on Android's app sandbox and file-based encryption. A rooted device can read it.
 - WebView security depends on the system WebView being kept up to date via Play Store.
 - PDF rendering uses the platform PDFium; its patch level follows the device's Android security updates.
+
+## Office document engine
+
+Office files (DOCX, XLSX, PPTX, DOC, XLS, PPT, ODT, ODS, ODP) are laid out by the bundled LibreOffice engine (see THIRD_PARTY.md).
+
+- It runs in a separate, non-exported process (`:office`), so a crash or hang in the engine cannot take the reader down; a conversion that takes more than three minutes is stopped and the process ended.
+- It only ever reads files from ReadStash's private storage and writes a PDF there; the PDF is then shown with Android's PdfRenderer.
+- Macros are never run (documents are only loaded and exported to PDF).
+- The engine is a large native component parsing untrusted files. It shares the app's sandbox and permissions; documents that reference external resources by URL could cause the engine to request them.
+- If the engine is unavailable or fails, DOCX/XLSX/PPTX fall back to the built-in text view, which runs no native code.

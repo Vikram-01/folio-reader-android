@@ -27,6 +27,15 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: Cache LibreOffice engine
+        uses: actions/cache@v4
+        with:
+          path: third_party/libreoffice
+          key: libreoffice-${{ hashFiles('scripts/fetch-libreoffice.sh') }}
+
+      - name: Fetch LibreOffice engine
+        run: bash scripts/fetch-libreoffice.sh
+
       - name: Unit, database and security tests
         run: |
           set -o pipefail
@@ -97,7 +106,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p "$RUNNER_TEMP/apk" && cd "$RUNNER_TEMP/apk"
-          cp "$GITHUB_WORKSPACE/dist/ReadStash-release.apk" "$GITHUB_WORKSPACE/dist/ReadStash-debug.apk" .
+          # Release APK only: with the document engine the debug APK is over GitHub's 100 MB file limit.
+          cp "$GITHUB_WORKSPACE/dist/ReadStash-release.apk" .
           git init -q -b apk-builds
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

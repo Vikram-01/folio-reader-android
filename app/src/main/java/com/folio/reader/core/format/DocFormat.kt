@@ -33,16 +33,18 @@ enum class DocFormat(
     GIF("GIF", setOf("gif"), "image/gif", ReaderKind.IMAGE),
     BMP("BMP", setOf("bmp"), "image/bmp", ReaderKind.IMAGE),
 
-    // Office Open XML: text, tables and slide text are shown (layout and images are not).
+    // Office documents are laid out by the bundled LibreOffice engine and shown as pages.
+    // (OOXML also has a built-in text view used when the engine isn't available.)
     DOCX("Word", setOf("docx"), "application/vnd.openxmlformats-officedocument.wordprocessingml.document", ReaderKind.OFFICE),
     XLSX("Excel", setOf("xlsx", "xlsm"), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", ReaderKind.OFFICE),
     PPTX("PowerPoint", setOf("pptx"), "application/vnd.openxmlformats-officedocument.presentationml.presentation", ReaderKind.OFFICE),
 
+    DOC("Word 97", setOf("doc"), "application/msword", ReaderKind.OFFICE),
+    XLS("Excel 97", setOf("xls"), "application/vnd.ms-excel", ReaderKind.OFFICE),
+    PPT("PowerPoint 97", setOf("ppt"), "application/vnd.ms-powerpoint", ReaderKind.OFFICE),
+    ODF("OpenDocument", setOf("odt", "ods", "odp"), "application/vnd.oasis.opendocument.text", ReaderKind.OFFICE),
+
     // Recognised but not yet readable in this version.
-    DOC("Word 97", setOf("doc"), "application/msword", null),
-    XLS("Excel 97", setOf("xls"), "application/vnd.ms-excel", null),
-    PPT("PowerPoint 97", setOf("ppt"), "application/vnd.ms-powerpoint", null),
-    ODF("OpenDocument", setOf("odt", "ods", "odp"), "application/vnd.oasis.opendocument.text", null),
     MOBI("Kindle", setOf("mobi", "azw", "azw3"), "application/x-mobipocket-ebook", null),
     FB2("FictionBook", setOf("fb2"), "application/x-fictionbook+xml", null),
     DJVU("DjVu", setOf("djvu", "djv"), "image/vnd.djvu", null),
@@ -66,6 +68,7 @@ enum class DocFormat(
                 m == "text/x-markdown" -> MARKDOWN
                 m == "application/x-yaml" || m == "text/yaml" -> YAML
                 m == "application/xhtml+xml" -> HTML
+                m == "application/vnd.oasis.opendocument.spreadsheet" || m == "application/vnd.oasis.opendocument.presentation" -> ODF
                 m == "text/rtf" -> RTF
                 else -> null
             }
@@ -74,6 +77,8 @@ enum class DocFormat(
         val supportedMimeTypes: Array<String> =
             arrayOf("application/pdf", "application/epub+zip", "text/*", "image/*", "application/json",
                 "application/xml", "application/rtf", "application/yaml", "application/xhtml+xml",
-                DOCX.mime, XLSX.mime, PPTX.mime, "application/octet-stream")
+                DOCX.mime, XLSX.mime, PPTX.mime, DOC.mime, XLS.mime, PPT.mime,
+                "application/vnd.oasis.opendocument.text", "application/vnd.oasis.opendocument.spreadsheet",
+                "application/vnd.oasis.opendocument.presentation", "application/octet-stream")
     }
 }

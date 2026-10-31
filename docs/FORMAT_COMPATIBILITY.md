@@ -13,15 +13,12 @@ Every imported file is checked by its **content signature**, not just its extens
 | RTF | .rtf | Partial | Yes | Converted to plain text; formatting and images are dropped. |
 | Markdown | .md .markdown | Yes | Yes | CommonMark + GFM tables. Images are not loaded. |
 | HTML | .html .htm .xhtml | Partial | Yes | Sanitised; scripts, forms and remote resources are removed. Local images are not shown. |
-| CSV / TSV | .csv .tsv .tab | Yes | Yes, per 100 rows | Table view with sticky header, up to 200,000 rows. |
+| CSV / TSV | .csv .tsv .tab | Yes | Yes, per 100 rows | Spreadsheet grid (A, B, C… columns, numbered rows), up to 200,000 rows. |
 | JPEG, PNG, WebP, BMP | | Yes | — | Zoom and pan. |
 | GIF | .gif | Yes | — | Animated. |
-| DOCX | .docx | Partial | Yes | Text, headings, bold/italic/underline, lists and tables. Page layout, images, headers/footers and comments are not shown. |
-| DOC (Word 97) | .doc | No | No | Stored in the library and exportable. |
-| XLSX, XLSM | .xlsx .xlsm | Partial | Yes, per 100 rows | Cell values of every sheet (one sheet: table view; several: one table per sheet). Shows stored results, not live formulas. Charts and formatting are not shown. Macros are never executed. |
-| XLS (Excel 97) | .xls | No | No | Stored and exportable. |
-| PPTX | .pptx | Partial | Yes, per slide | Slide text in order (first paragraph as the slide title). Layout, images and animations are not shown. |
-| PPT (PowerPoint 97) | .ppt | No | No | Stored and exportable. |
+| DOCX, DOC, ODT | .docx .doc .odt | Yes | Yes, per page | Laid out as pages by the bundled LibreOffice engine (fonts, images, tables, headers as in Office), shown in the PDF viewer with book view. Text-only fallback for DOCX if the engine fails. |
+| XLSX, XLSM, XLS, ODS | .xlsx .xlsm .xls .ods | Yes | Yes, per page | Laid out as printed pages by the engine (cell styles, borders, charts). Text grid fallback for XLSX. Macros are never executed. |
+| PPTX, PPT, ODP | .pptx .ppt .odp | Yes | Yes, per slide | Each slide laid out as a page, as designed. Text-only fallback for PPTX. |
 | ODT, ODS, ODP | | No | No | Stored and exportable. |
 | MOBI, AZW, AZW3 | | No | No | Stored and exportable. |
 | FB2 | | No | No | Stored and exportable. |
@@ -32,4 +29,4 @@ Every imported file is checked by its **content signature**, not just its extens
 
 ## Opening without saving
 
-"Open with Folio" from a file manager, or **Open a file** on the Home screen, shows any readable format above in a read-only viewer straight from the source file. Nothing is copied into the library, and no thumbnail, search index, reading progress or history is written. EPUB is the only exception: it is unpacked into Folio's private cache while open and deleted when the viewer closes (and on the next app start). Sharing a file to Folio still adds it to the library.
+"Open with ReadStash" from a file manager, or **Open a file** on the Home screen, shows any readable format above in a read-only viewer straight from the source file. Nothing is copied into the library, and no thumbnail, search index, reading progress or history is written. EPUB and Office files are the exceptions: they are unpacked or laid out in ReadStash's private cache while open and deleted when the viewer closes (and on the next app start). Sharing a file to ReadStash still adds it to the library.

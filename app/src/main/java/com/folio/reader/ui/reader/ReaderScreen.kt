@@ -52,6 +52,7 @@ fun ReaderScreen(nav: (String) -> Unit, back: () -> Unit, vm: ReaderViewModel = 
     val annotations by vm.annotations.collectAsStateWithLifecycle()
     val speaking by vm.speaking.collectAsStateWithLifecycle()
     val searchMsg by vm.searchMessage.collectAsStateWithLifecycle()
+    val loadingStatus by vm.loadingStatus.collectAsStateWithLifecycle()
     var chrome by remember { mutableStateOf(true) }
     var sheet by remember { mutableStateOf(Sheet.NONE) }
     var find by remember { mutableStateOf("") }
@@ -84,7 +85,7 @@ fun ReaderScreen(nav: (String) -> Unit, back: () -> Unit, vm: ReaderViewModel = 
         Box(Modifier.fillMaxSize().background(colors.background)) {
             val start = initial
             when {
-                c is ReaderContent.Loading || start == null -> CircularProgressIndicator(Modifier.align(Alignment.Center))
+                c is ReaderContent.Loading || start == null -> LoadingIndicator(loadingStatus, Modifier.align(Alignment.Center))
                 c is ReaderContent.Failed -> Box(Modifier.fillMaxSize().statusBarsPadding(), contentAlignment = Alignment.Center) {
                     EmptyState(Icons.Outlined.ErrorOutline, "Can't open this document", c.message) { OutlinedButton(onClick = back) { Text("Go back") } }
                 }
@@ -278,6 +279,18 @@ private fun InDocSearch(vm: ReaderViewModel, query: String, onQuery: (String) ->
                     overlineContent = { Text(h.locationLabel) },
                     headlineContent = { Text(highlightSnippet(h.snippet, hl), style = MaterialTheme.typography.bodySmall, maxLines = 3, overflow = TextOverflow.Ellipsis) })
             }
+        }
+    }
+}
+
+/** Spinner with an optional explanation underneath. */
+@Composable
+internal fun LoadingIndicator(status: String?, modifier: Modifier = Modifier) {
+    Column(modifier.padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        CircularProgressIndicator()
+        if (status != null) {
+            Text(status, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.padding(top = 16.dp))
         }
     }
 }

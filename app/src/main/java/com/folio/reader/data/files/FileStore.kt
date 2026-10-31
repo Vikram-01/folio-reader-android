@@ -16,6 +16,7 @@ import javax.inject.Singleton
  *  files/favicons   site icons captured by the browser
  *  files/pages      sanitised offline copies of saved web pages
  *  cache/epub       unpacked EPUB books (regenerable)
+ *  cache/office-pdf Office documents laid out as PDF by the document engine (regenerable)
  *  cache/tmp        short-lived working files, wiped on start
  */
 @Singleton
@@ -27,6 +28,7 @@ class FileStore @Inject constructor(@ApplicationContext private val context: Con
     val pagesDir: File get() = dir(context.filesDir, "pages")
     val epubCacheDir: File get() = dir(context.cacheDir, "epub")
     val tmpDir: File get() = dir(context.cacheDir, "tmp")
+    val officePdfDir: File get() = dir(context.cacheDir, "office-pdf")
 
     private fun dir(parent: File, name: String) = File(parent, name).apply { if (!exists()) mkdirs() }
 

@@ -13,7 +13,9 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -82,46 +84,76 @@ fun TextReader(
     }
 }
 
-/** CSV / TSV viewer: sticky header, shared horizontal scroll, row numbers. */
+/** Spreadsheet column name for a 0-based index: 0 -> A, 25 -> Z, 26 -> AA. */
+internal fun columnName(index: Int): String {
+    var n = index + 1
+    val sb = StringBuilder()
+    while (n > 0) { val r = (n - 1) % 26; sb.append('A' + r); n = (n - 1) / 26 }
+    return sb.reverse().toString()
+}
+
+/**
+ * CSV / TSV / spreadsheet viewer laid out like a spreadsheet: A, B, C… column
+ * headers, numbered rows, grid lines, and every row of the file shown as data
+ * (the first row is not turned into a header). Shared horizontal scroll.
+ */
 @Composable
 fun TableReader(rows: List<List<String>>, truncated: Boolean, colors: ReaderColors, initialRow: Int, jump: Int?, onJumped: () -> Unit,
                 find: String, onRow: (Int) -> Unit, onTap: () -> Unit) {
     val state = rememberLazyListState(initialFirstVisibleItemIndex = initialRow.coerceIn(0, (rows.size - 1).coerceAtLeast(0)))
     LaunchedEffect(state) { snapshotFlow { state.firstVisibleItemIndex }.distinctUntilChanged().collect { onRow(it) } }
     LaunchedEffect(jump) { jump?.let { state.scrollToItem(it.coerceIn(0, (rows.size - 1).coerceAtLeast(0))); onJumped() } }
-    val cols = remember(rows) { rows.take(500).maxOfOrNull { it.size } ?: 0 }
+    val cols = remember(rows) { (rows.take(2000).maxOfOrNull { it.size } ?: 0).coerceAtLeast(1) }
     val widths = remember(rows) {
         val density = 7.5f
         (0 until cols).map { c -> (rows.take(300).maxOfOrNull { it.getOrNull(c)?.length ?: 0 } ?: 0).coerceIn(4, 40) * density + 24f }
     }
     val h = rememberScrollState()
-    val header = rows.firstOrNull().orEmpty()
     val cell = TextStyle(fontSize = 13.sp, color = colors.text)
+    val headerBg = colors.muted.copy(alpha = 0.16f)
+    val grid = colors.muted.copy(alpha = 0.28f)
     val hl = Color(0x66FFC107)
+    val rowNumWidth = (36 + 8 * rows.size.toString().length).dp
     Column(Modifier.fillMaxSize().background(colors.background).padding(top = 64.dp).pointerInput(Unit) { detectTapGestures(onTap = { onTap() }) }) {
-        Row(Modifier.horizontalScroll(h).background(colors.muted.copy(alpha = 0.15f)).padding(vertical = 8.dp)) {
-            Text("#", Modifier.width(56.dp).padding(start = 8.dp), style = cell.copy(fontWeight = FontWeight.Bold, color = colors.muted))
+        // Column letters
+        Row(Modifier.horizontalScroll(h).background(headerBg)) {
+            Box(Modifier.width(rowNumWidth).height(28.dp).gridCell(grid))
             (0 until cols).forEach { c ->
-                Text(header.getOrNull(c) ?: "", Modifier.width(widths[c].dp).padding(horizontal = 6.dp), style = cell.copy(fontWeight = FontWeight.Bold),
-                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Box(Modifier.width(widths[c].dp).height(28.dp).gridCell(grid), contentAlignment = Alignment.Center) {
+                    Text(columnName(c), style = cell.copy(fontWeight = FontWeight.Medium, color = colors.muted), maxLines = 1)
+                }
             }
         }
         LazyColumn(state = state, modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 120.dp)) {
-            itemsIndexed(rows.drop(1), key = { i, _ -> i }) { i, row ->
+            itemsIndexed(rows, key = { i, _ -> i }) { i, row ->
                 val match = find.isNotBlank() && row.any { it.contains(find, true) }
-                Row(Modifier.horizontalScroll(h).background(if (match) hl else if (i % 2 == 0) Color.Transparent else colors.muted.copy(alpha = 0.06f)).padding(vertical = 6.dp)) {
-                    Text("${i + 2}", Modifier.width(56.dp).padding(start = 8.dp), style = cell.copy(color = colors.muted))
+                Row(Modifier.horizontalScroll(h).height(IntrinsicSize.Min).background(if (match) hl else Color.Transparent)) {
+                    Box(Modifier.width(rowNumWidth).fillMaxHeight().background(headerBg).gridCell(grid), contentAlignment = Alignment.Center) {
+                        Text("${i + 1}", style = cell.copy(color = colors.muted, fontWeight = FontWeight.Medium))
+                    }
                     (0 until cols).forEach { c ->
-                        Text(row.getOrNull(c) ?: "", Modifier.width(widths[c].dp).padding(horizontal = 6.dp), style = cell, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                        val v = row.getOrNull(c) ?: ""
+                        val numeric = v.isNotEmpty() && v.trim().toDoubleOrNull() != null
+                        Box(Modifier.width(widths[c].dp).fillMaxHeight().gridCell(grid).padding(horizontal = 6.dp, vertical = 5.dp),
+                            contentAlignment = if (numeric) Alignment.CenterEnd else Alignment.CenterStart) {
+                            Text(v, style = cell, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                        }
                     }
                 }
             }
             if (truncated) item {
-                Text("Showing the first ${rows.size} rows. The full file stays in your library.", style = MaterialTheme.typography.bodySmall,
+                Text("Showing the first ${rows.size} rows.", style = MaterialTheme.typography.bodySmall,
                     color = colors.muted, modifier = Modifier.padding(16.dp))
             }
         }
     }
+}
+
+/** Thin right and bottom grid lines, like spreadsheet cells. */
+private fun Modifier.gridCell(color: Color): Modifier = drawBehind {
+    val w = 1f
+    drawLine(color, androidx.compose.ui.geometry.Offset(size.width - w / 2, 0f), androidx.compose.ui.geometry.Offset(size.width - w / 2, size.height), w)
+    drawLine(color, androidx.compose.ui.geometry.Offset(0f, size.height - w / 2), androidx.compose.ui.geometry.Offset(size.width, size.height - w / 2), w)
 }
 
 @Composable

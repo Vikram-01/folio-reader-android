@@ -26,6 +26,7 @@ data class TextBlock(val location: Int, val label: String, val text: String)
 class TextExtractor @Inject constructor(
     @ApplicationContext private val context: Context,
     private val files: FileStore,
+    private val officePdf: com.folio.reader.data.office.OfficePdfCache,
 ) {
     @Volatile private var pdfBoxReady = false
 
@@ -46,6 +47,22 @@ class TextExtractor @Inject constructor(
             val t = if (b.text.length > budget) b.text.take(budget) else b.text
             budget -= t.length
             sink(b.copy(text = t))
+        }
+        suspend fun pdfPages(pdf: File) {
+            ensurePdfBox()
+            PDDocument.load(pdf, MemoryUsageSetting.setupTempFileOnly().setTempDir(files.tmpDir)).use { doc ->
+                val stripper = PDFTextStripper().apply { sortByPosition = true }
+                val n = doc.numberOfPages
+                for (p in 1..n) {
+                    coroutineContext.ensureActive()
+                    stripper.startPage = p
+                    stripper.endPage = p
+                    val text = try { stripper.getText(doc) } catch (e: Exception) { "" }
+                    emit(TextBlock(p - 1, "Page $p", text))
+                    onProgress(p, n)
+                    if (budget <= 0) break
+                }
+            }
         }
         when (format.kind) {
             ReaderKind.PDF -> {
@@ -96,6 +113,13 @@ class TextExtractor @Inject constructor(
                 }
             }
             ReaderKind.OFFICE -> {
+                // Lay the document out once with the engine (this also makes its first opening instant)
+                // and index the resulting pages, so search results jump to the right page.
+                val pdf = if (officePdf.available && com.folio.reader.data.office.OfficePdfCache.handles(format)) {
+                    try { officePdf.ensure(file, cacheKey) } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (e: Exception) { null }
+                } else null
+                if (pdf != null) { pdfPages(pdf); return }
+                if (!com.folio.reader.data.office.OfficePdfCache.hasTextFallback(format)) return
                 val parsed = file.inputStream().buffered().use { OfficeReader.parse(format, it) }
                 OfficeReader.plainBlocks(parsed).forEachIndexed { i, (label, text) ->
                     coroutineContext.ensureActive()
@@ -115,6 +139,16 @@ class TextExtractor @Inject constructor(
                 if (location !in 0 until doc.numberOfPages) "" else
                     PDFTextStripper().apply { startPage = location + 1; endPage = location + 1; sortByPosition = true }.getText(doc)
             }
+        }
+        if (format.kind == ReaderKind.OFFICE) {
+            officePdf.cached(cacheKey)?.let { pdf ->
+                ensurePdfBox()
+                return PDDocument.load(pdf, MemoryUsageSetting.setupTempFileOnly().setTempDir(files.tmpDir)).use { doc ->
+                    if (location !in 0 until doc.numberOfPages) "" else
+                        PDFTextStripper().apply { startPage = location + 1; endPage = location + 1; sortByPosition = true }.getText(doc)
+                }
+            }
+            if (!com.folio.reader.data.office.OfficePdfCache.hasTextFallback(format)) return ""
         }
         if (format.kind == ReaderKind.EPUB) {
             return EpubBook.open(file, File(files.epubCacheDir, cacheKey).apply { mkdirs() }).chapterText(location)

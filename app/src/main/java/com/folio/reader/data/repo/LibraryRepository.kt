@@ -172,6 +172,7 @@ class LibraryRepository @Inject constructor(
         files.libraryFile(doc.storedName).delete()
         doc.thumbnailName?.let { files.thumbFile(it).delete() }
         java.io.File(files.epubCacheDir, id.toString()).deleteRecursively()
+        java.io.File(files.officePdfDir, "doc-$id.pdf").delete()
         db.tags().deleteOrphans()
     }
 

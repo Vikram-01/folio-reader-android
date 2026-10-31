@@ -66,6 +66,7 @@ class ReaderViewModel @Inject constructor(
     private val extractor: TextExtractor,
     private val indexer: IndexScheduler,
     private val files: FileStore,
+    private val officePdf: com.folio.reader.data.office.OfficePdfCache,
     @com.folio.reader.di.AppScope private val appScope: kotlinx.coroutines.CoroutineScope,
 ) : ViewModel() {
     val docId: Long = handle["id"] ?: 0L
@@ -74,6 +75,8 @@ class ReaderViewModel @Inject constructor(
     val prefs = prefsRepo.prefs.stateIn(viewModelScope, SharingStarted.Eagerly, UserPrefs())
     val doc = MutableStateFlow<DocumentEntity?>(null)
     val content = MutableStateFlow<ReaderContent>(ReaderContent.Loading)
+    /** Shown under the spinner while loading takes a while (e.g. laying out an Office document). */
+    val loadingStatus = MutableStateFlow<String?>(null)
     /** Where the reader should open; null until known. */
     val initial = MutableStateFlow<Position?>(null)
     /** Current reading position as reported by the reader. */
@@ -107,7 +110,7 @@ class ReaderViewModel @Inject constructor(
         }
     }
 
-    private fun load(d: DocumentEntity): ReaderContent {
+    private suspend fun load(d: DocumentEntity): ReaderContent {
         val format = library.formatOf(d)
         val file = library.fileOf(d)
         if (!file.isFile) return ReaderContent.Failed("The stored file is missing. Restore it from a backup or import it again.")
@@ -124,7 +127,7 @@ class ReaderViewModel @Inject constructor(
                     val (raw, truncated) = TextFormats.readText(file)
                     ContentBuilder.fromText(format, raw, truncated)
                 }
-                ReaderKind.OFFICE -> file.inputStream().buffered().use { ContentBuilder.fromOffice(format, it) }
+                ReaderKind.OFFICE -> loadOffice(d, format, file)
                 ReaderKind.IMAGE -> ReaderContent.Image(file)
                 null -> ReaderContent.Unsupported(format)
             }
@@ -135,6 +138,33 @@ class ReaderViewModel @Inject constructor(
         } catch (e: Exception) {
             ReaderContent.Failed("Couldn't open this document: ${e.message ?: e.javaClass.simpleName}")
         }
+    }
+
+    /** Office documents are laid out as pages by the document engine; the text view is the fallback. */
+    private suspend fun loadOffice(d: DocumentEntity, format: DocFormat, file: File): ReaderContent {
+        var reason: String? = null
+        if (officePdf.available) {
+            if (officePdf.cached(d.id.toString()) == null) loadingStatus.value = "Laying out pages… (the first time can take a little while)"
+            try {
+                val pdf = officePdf.ensure(file, d.id.toString())
+                val n = PdfDocumentHolder.pageCount(pdf)
+                if (n > 0) return ReaderContent.Pdf(PdfSource.FromFile(pdf), n)
+                officePdf.evict(d.id.toString())
+                reason = "the layout had no pages"
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                officePdf.evict(d.id.toString())
+                reason = e.message
+            } finally {
+                loadingStatus.value = null
+            }
+        } else reason = "the document engine isn't available on this device"
+        if (!com.folio.reader.data.office.OfficePdfCache.hasTextFallback(format)) {
+            return ReaderContent.Failed("Couldn't lay out this ${format.label} document${reason?.let { ": $it" } ?: "."}")
+        }
+        searchMessage.value = "Showing text only — ${reason ?: "layout unavailable"}."
+        return file.inputStream().buffered().use { ContentBuilder.fromOffice(format, it) }
     }
 
     fun report(p: Position) {

@@ -34,9 +34,12 @@ class FormatTest {
         // Unnamed Office package recognised from its part folders.
         val unnamed = byteArrayOf(0x50, 0x4B, 0x03, 0x04) + ByteArray(26) + "word/document.xml".toByteArray()
         assertEquals(DocFormat.DOCX, ok(FormatDetector.detect(unnamed, null, null)))
-        // Legacy binary Office is recognised but has no viewer.
+        // Legacy binary Office is laid out by the document engine.
         val ole = byteArrayOf(0xD0.toByte(), 0xCF.toByte(), 0x11, 0xE0.toByte()) + ByteArray(40)
-        assertTrue(FormatDetector.detect(ole, "old.doc", null) is Result.Unsupported)
+        assertEquals(DocFormat.DOC, ok(FormatDetector.detect(ole, "old.doc", null)))
+        assertEquals(DocFormat.XLS, ok(FormatDetector.detect(ole, "old.xls", null)))
+        // Recognised formats without a viewer stay "unsupported".
+        assertTrue(FormatDetector.detect("BOOKMOBI".toByteArray() + ByteArray(40), "novel.mobi", null) is Result.Unsupported)
     }
 
     @Test fun textFormats() {

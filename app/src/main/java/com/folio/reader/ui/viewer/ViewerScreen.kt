@@ -50,6 +50,10 @@ fun ViewerScreen(nav: (String) -> Unit, back: () -> Unit, vm: ViewerViewModel = 
     val formatLabel by vm.formatLabel.collectAsStateWithLifecycle()
     val pos by vm.position.collectAsStateWithLifecycle()
     val jump by vm.jump.collectAsStateWithLifecycle()
+    val loadingStatus by vm.loadingStatus.collectAsStateWithLifecycle()
+    val notice by vm.notice.collectAsStateWithLifecycle()
+    val snackbar = remember { SnackbarHostState() }
+    LaunchedEffect(notice) { notice?.let { snackbar.showSnackbar(it); vm.notice.value = null } }
     var chrome by remember { mutableStateOf(true) }
     var pages by remember { mutableStateOf(false) }
     val colors = readerColors(prefs.readerTheme)
@@ -75,7 +79,7 @@ fun ViewerScreen(nav: (String) -> Unit, back: () -> Unit, vm: ViewerViewModel = 
 
     Box(Modifier.fillMaxSize().background(colors.background)) {
         when (c) {
-            is ReaderContent.Loading -> CircularProgressIndicator(Modifier.align(Alignment.Center))
+            is ReaderContent.Loading -> com.folio.reader.ui.reader.LoadingIndicator(loadingStatus, Modifier.align(Alignment.Center))
             is ReaderContent.Failed -> Box(Modifier.fillMaxSize().statusBarsPadding(), contentAlignment = Alignment.Center) {
                 EmptyState(Icons.Outlined.ErrorOutline, "Can't open this file", c.message) { OutlinedButton(onClick = back) { Text("Go back") } }
             }
@@ -152,6 +156,10 @@ fun ViewerScreen(nav: (String) -> Unit, back: () -> Unit, vm: ViewerViewModel = 
                 }
             }
         }
+    }
+
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+        SnackbarHost(snackbar, Modifier.navigationBarsPadding().padding(bottom = 72.dp))
     }
 
     if (pages && c is ReaderContent.Pdf) {

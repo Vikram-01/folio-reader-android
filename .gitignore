@@ -11,3 +11,6 @@
 *.jks
 *.keystore
 /dist/
+
+# LibreOffice engine (fetched by scripts/fetch-libreoffice.sh)
+third_party/libreoffice/

@@ -42,9 +42,10 @@ import javax.inject.Inject
  * nothing is added to the library, no thumbnail, search index, reading
  * progress or history is written.
  *
- * The one exception is EPUB, whose chapters must be served to the WebView from
- * disk: it is unpacked into the private cache and deleted as soon as the viewer
- * closes (and again on the next app start, in case the app was killed).
+ * Exceptions: EPUB (chapters are served to the WebView from disk) and Office
+ * documents (the layout engine reads a file) use a private working folder in
+ * the cache that is deleted as soon as the viewer closes (and again on the next
+ * app start, in case the app was killed).
  */
 @HiltViewModel
 class ViewerViewModel @Inject constructor(
@@ -52,6 +53,7 @@ class ViewerViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val prefsRepo: PrefsRepository,
     private val files: FileStore,
+    private val officePdf: com.folio.reader.data.office.OfficePdfCache,
 ) : ViewModel() {
 
     val uri: Uri = handle.get<String>("uri")?.let(Uri::parse) ?: Uri.EMPTY
@@ -59,6 +61,9 @@ class ViewerViewModel @Inject constructor(
     val title = MutableStateFlow("")
     val formatLabel = MutableStateFlow<String?>(null)
     val content = MutableStateFlow<ReaderContent>(ReaderContent.Loading)
+    val loadingStatus = MutableStateFlow<String?>(null)
+    /** One-off notice, e.g. when an Office file falls back to the text view. */
+    val notice = MutableStateFlow<String?>(null)
     /** Current page / chapter / line, in memory only. */
     val position = MutableStateFlow(0)
     val jump = MutableStateFlow<Int?>(null)
@@ -72,7 +77,7 @@ class ViewerViewModel @Inject constructor(
     private fun stream(): InputStream =
         context.contentResolver.openInputStream(uri) ?: throw FileNotFoundException("The file is no longer available.")
 
-    private fun load(): ReaderContent {
+    private suspend fun load(): ReaderContent {
         if (uri.scheme != "content") return ReaderContent.Failed("This file can't be opened. Open it from a file manager or another app.")
         val resolver = context.contentResolver
         var name: String? = null
@@ -109,7 +114,7 @@ class ViewerViewModel @Inject constructor(
                     val (raw, truncated) = stream().use { TextFormats.readStream(it) }
                     ContentBuilder.fromText(format, raw, truncated)
                 }
-                ReaderKind.OFFICE -> stream().buffered().use { ContentBuilder.fromOffice(format, it) }
+                ReaderKind.OFFICE -> openOffice(format, name)
                 ReaderKind.EPUB -> openEpub()
                 null -> ReaderContent.Unsupported(format)
             }
@@ -126,9 +131,44 @@ class ViewerViewModel @Inject constructor(
         }
     }
 
+    /** A private, per-viewer working folder that is deleted when the viewer closes. */
+    private fun workDir(): File = tempDir ?: File(files.tmpDir, "view-" + UUID.randomUUID()).apply { mkdirs() }.also { tempDir = it }
+
+    /**
+     * Office files are laid out by the document engine, which needs a file on disk: the
+     * file is copied into the private working folder and the result kept there only while
+     * the viewer is open.
+     */
+    private suspend fun openOffice(format: com.folio.reader.core.format.DocFormat, name: String?): ReaderContent {
+        var reason: String? = null
+        if (officePdf.available) {
+            loadingStatus.value = "Laying out pages…"
+            try {
+                val pdf = File(workDir(), "view.pdf")
+                val ext = name?.substringAfterLast('.', "")?.takeIf { it.lowercase() in format.extensions } ?: format.extensions.first()
+                officePdf.convert(ext, pdf) { target ->
+                    stream().use { input -> target.outputStream().use { SafeZip.copyBounded(input, it, Limits.MAX_IMPORT_BYTES) } }
+                }
+                val n = PdfDocumentHolder.pageCount(pdf)
+                if (n > 0) return ReaderContent.Pdf(PdfSource.FromFile(pdf), n)
+                reason = "the layout had no pages"
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                reason = e.message
+            } finally {
+                loadingStatus.value = null
+            }
+        } else reason = "the document engine isn't available on this device"
+        if (!com.folio.reader.data.office.OfficePdfCache.hasTextFallback(format)) {
+            return ReaderContent.Failed("Couldn't lay out this ${format.label} document${reason?.let { ": $it" } ?: "."}")
+        }
+        notice.value = "Showing text only — ${reason ?: "layout unavailable"}."
+        return stream().buffered().use { ContentBuilder.fromOffice(format, it) }
+    }
+
     private fun openEpub(): ReaderContent {
-        val dir = File(files.tmpDir, "view-" + UUID.randomUUID()).apply { mkdirs() }
-        tempDir = dir
+        val dir = workDir()
         val packed = File(dir, "book.epub")
         stream().use { input -> packed.outputStream().use { SafeZip.copyBounded(input, it, Limits.MAX_IMPORT_BYTES) } }
         val book = EpubBook.open(packed, dir)

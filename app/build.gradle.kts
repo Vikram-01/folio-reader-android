@@ -30,6 +30,18 @@ android {
         versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
+        // The bundled LibreOffice document engine is 64-bit ARM only.
+        ndk { abiFilters += "arm64-v8a" }
+    }
+
+    // LibreOffice document engine: native libraries and support files fetched by
+    // scripts/fetch-libreoffice.sh. Without them the app still builds and Office
+    // documents fall back to the built-in text view.
+    sourceSets {
+        getByName("main") {
+            jniLibs.srcDir(rootProject.file("third_party/libreoffice/jniLibs"))
+            assets.srcDir(rootProject.file("third_party/libreoffice/assets"))
+        }
     }
 
     signingConfigs {
@@ -69,6 +81,8 @@ android {
         buildConfig = true
     }
     packaging {
+        // Install the engine's native libraries to disk, as LibreOffice's own app does.
+        jniLibs { useLegacyPackaging = true }
         resources { excludes += setOf("/META-INF/{AL2.0,LGPL2.1}", "META-INF/DEPENDENCIES", "META-INF/LICENSE*", "META-INF/NOTICE*") }
     }
     lint {
