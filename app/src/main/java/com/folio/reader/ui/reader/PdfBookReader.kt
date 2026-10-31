@@ -100,6 +100,8 @@ internal fun PdfBookReader(
             }
 
             val widthPx = with(LocalDensity.current) { maxWidth.toPx() }
+            val boxW = maxWidth
+            val boxH = maxHeight
             Box(
                 Modifier.fillMaxSize()
                     .pointerInput(layout) {
@@ -146,7 +148,7 @@ internal fun PdfBookReader(
                     },
                 ) { spread ->
                     Box(Modifier.fillMaxSize().pageTurn(pager, spread)) {
-                        Spread(holder, layout, spread, maxWidth, maxHeight, renderScale, filter)
+                        Spread(holder, layout, spread, boxW, boxH, renderScale, filter)
                         // Shade that deepens as a page folds over or away from this one.
                         Box(Modifier.matchParentSize().graphicsLayer { alpha = shadeFor(pager, spread) }.background(Color.Black))
                     }
