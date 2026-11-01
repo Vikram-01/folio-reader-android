@@ -28,7 +28,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
 
       - name: Cache LibreOffice engine
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: third_party/libreoffice
           key: libreoffice-${{ hashFiles('scripts/fetch-libreoffice.sh') }}
