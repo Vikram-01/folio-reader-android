@@ -25,7 +25,7 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
 
       - name: Cache LibreOffice engine
         uses: actions/cache@v4
@@ -138,4 +138,4 @@ jobs:
           distribution: temurin
           java-version: 17
       - name: Submit dependency graph for vulnerability alerts
-        uses: gradle/actions/dependency-submission@v4
+        uses: gradle/actions/dependency-submission@v6
